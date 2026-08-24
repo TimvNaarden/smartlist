@@ -9,7 +9,7 @@ services:
       - "traefik.http.routers.smartlist.rule=Host(`smartlist.vannaarden.dev`)"
       - "traefik.http.routers.smartlist.entrypoints=websecure"
       - "traefik.http.routers.smartlist.tls.certresolver=letsencrypt"
-      - "traefik.http.services.smartlist.loadbalancer.server.port=8000"
+      - "traefik.http.services.smartlist.loadbalancer.server.port=80"
     networks:
       - frontend
 
