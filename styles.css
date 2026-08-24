@@ -1,0 +1,530 @@
+*{
+    margin: 0;
+    padding: 0;
+    scroll-behavior: smooth;
+    font-family: "Roboto", sans-serif;
+}
+
+body{
+    min-height: 100vh;
+}
+
+/* nav */
+header{
+    position: sticky;
+    top: 0;
+}
+
+nav{
+    background-color: white;
+    box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.1);
+}
+
+nav ul{
+    width: calc(100% - 2rem);
+    list-style: none;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+nav li{
+    height: 50px;
+}
+
+nav a{
+    height: 100%;
+    padding: 0 30px;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    color: black;
+    font-weight: 650;
+}
+
+nav a:hover{
+    color: #16A34A;
+    text-decoration: none;
+}
+
+nav li:first-child{
+    margin-right: auto;
+}
+
+nav li:nth-child(2){
+    margin-right: auto;
+}
+
+.menulogo{
+    height: 50px;
+    padding-left: 50px;
+}
+
+.sidemenu{
+    position: fixed;
+    top: 0;
+    right: 0;
+    height: 100vh;
+    width: 250px;
+    z-index: 999;
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(10px);
+    box-shadow: -10px, 0px 10px rgba(0, 0, 0, 0.1);
+    display: none;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+}
+
+.sidemenu li{
+    width: 100%;
+}
+.sidemenu a{
+    width: 100%;
+}
+
+.menuknop{
+    display: none;
+}
+
+/* nav en algemeen responsive */
+@media(max-width: 800px){
+    .hideOnMobile{
+        display: none;
+    }
+    .menuknop{
+        display: block;
+    }
+}
+
+@media(min-width: 801px){
+    .hideOnComputer{
+        display: none;
+    }
+}
+
+@media(max-width: 400px){
+    .sidemenu{
+        width: 100%;
+    }
+}
+
+/* footer icm bootstrap */
+footer{
+    background-color: white;
+    box-shadow: -3px -3px 5px rgba(0, 0, 0, 0.1)
+}
+
+/* hero */
+.heroimg{
+    width: 100%;
+    display: flex;
+}
+.hero{
+    display: flex;
+    height: 100vh;
+    align-items: center;
+    padding-top: 20px;
+    min-height: 600px;
+    max-height: 800px;
+    padding-left: 4rem;
+    padding-right: 2rem;
+}
+
+.herotitel{
+    font-size: 60px;
+    line-height: 100%;
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin: 16px 0;
+    color: black;
+}
+
+.herotekst{
+    font-size: 16px;
+    line-height: 160%;
+}
+
+.heroknop{
+    color: white;
+    background-color: #16A34A;
+    padding: 8px 32px;
+    display: inline-block;
+    font-weight: 500;
+    transition: all 300ms ease;
+    text-decoration: none;
+    border-radius: 5px;
+}
+
+.heroknop:hover{
+    padding: 13px 60px;
+    text-decoration: none;
+    color: white;
+}
+
+.hgradient{
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    background: #16A34A;
+    right: 0;
+    top: 200px;
+    z-index: -1;
+    border-radius: 90%;
+    filter: blur(115px);
+}
+ h2{
+    font-size: 60px;
+    line-height: 100%;
+    font-weight: 1000;
+    letter-spacing: -1px;
+    margin: 16px 0;
+    color: black;
+ }
+
+/* hoe */
+.hoe{
+    padding-top: 60px;
+    padding-bottom: 80px;
+    padding-left: 4rem;
+    padding-right: 3.3rem;
+}
+
+.stappenhoe{
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+}
+
+.column{
+    background: #f4fbf6;
+    border-radius: 16px;
+    padding: 24px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.hoeimg{
+    width: 40px;
+    flex-shrink: 0;
+}
+
+@media (max-width: 800px){
+    .stappenhoe {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* populair */
+.populair{
+    padding-left: 4rem;
+    padding-right: 3.3rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr);
+    gap: 32px;
+    align-items: flex-start;
+    margin: 0 auto;
+    padding-bottom: 60px;
+}
+
+.poplinks p{
+    max-width: 420px;
+    line-height: 150%;
+    margin-bottom: 24px;
+}
+
+.poprechts{
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
+}
+
+/* recepten cards */
+    .receptcard{
+    background: #ffffff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 calc(20% - 24px);
+    max-width: 360px;
+}
+
+.receptcard:hover{
+    box-shadow: 0 12px 18px rgba(0, 0, 0, 0.18);
+}
+
+.receptcard img{
+    width: 100%;
+    display: block;
+    object-fit: cover;
+    height: 220px;
+}
+
+.receptcontent{
+    padding: 16px 20px 20px 20px;
+}
+
+.receptinfo{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 14px;
+    color: #4b5563;
+    margin-bottom: 10px;
+}
+
+.receptinfo i{
+    margin-right: 4px;
+}
+
+.recepttitel{
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+    line-height: 130%;
+}
+
+@media (max-width: 800px){
+    .populair {
+        grid-template-columns: 1fr; 
+        padding-left: 1.5rem;
+        padding-right: 1.5rem;
+    }
+}
+
+/* Recepten pagina */
+.filtercontrols{
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  padding-left: 3.3rem;
+  padding-right: 3.3rem;
+  justify-content: space-between;
+}
+
+.zoekbalk{
+  display: flex;
+  align-items: center;
+  border: 1px solid #e5e7eb;
+  border-radius: 999px;
+  padding: 0 16px;           
+  height: 52px;              
+  max-width: 480px;
+  width: 100%;
+  flex: 1 1 180px;           
+  box-sizing: border-box;
+}
+
+.zoekbalk i{
+  margin-right: 8px;
+  font-size: 14px;
+  color: #6b7280;
+}
+
+.zoekbalk input{
+    border: none;
+    outline: none;
+    width: 100%;
+    font-size: 16px;
+    background: transparent;
+    padding: 0;
+    }
+
+.tagfilters{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-left: auto;
+}
+
+.tagknop{
+    border-radius: 999px;
+    padding: 6px 16px;
+    background-color: #ffffff;
+    cursor: pointer;
+}
+
+.tagknop.active{
+    border-color: #16a34a;
+    color: #16a34a;
+    background-color: #ffffff;
+}
+
+.tagknop:focus{
+    outline: none;
+}
+
+.tagknop:focus-visible{
+    outline: none;
+}
+
+.recepten-grid{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    margin: 0 auto;
+    margin-top: 16px;
+    padding-bottom: 30px;
+    padding-left: 3rem;
+    padding-right: 3.3rem;
+    justify-content: space-between;
+}
+
+/* Maximaal aantal recepten breedte per 4,2,1 */
+@media (max-width: 1650px) {
+    .receptcard {
+        flex: 0 0 calc(25% - 24px);
+    }
+}
+
+@media (max-width: 1024px) {
+    .receptcard {
+        flex: 0 0 calc(50% - 24px);
+    }
+}
+
+@media (max-width: 640px) {
+    .receptcard {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+
+
+/* pop up */
+.receptpopup{
+    position: fixed;
+    inset: 0;
+    display: none;            
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.55);
+    z-index: 2000;
+    padding: 16px;
+}
+
+.receptpopup.open{
+    display: flex;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.receptglas{
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    gap: 24px;
+    max-width: 900px;
+    max-height: calc(100vh-32px);
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 24px;
+    padding: 24px;
+    backdrop-filter: blur(10px);
+    box-shadow: -10px, 0px 10px rgba(0, 0, 0, 0.1);
+    color: #ffffff;
+    overflow-y: auto;
+    box-sizing: border-box;
+    -webkit-overflow-scrolling: touch;
+}
+
+.receptpopupimg{
+    flex: 0 0 280px;
+    max-height: 60vh;
+    overflow: hidden;
+    border-radius: 18px;
+}
+
+.receptpopup img{
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+
+.receptpopuptxt{
+    flex: 1;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+.receptpopuptitel{
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 12px;
+}
+
+.receptpopuptxt h4{
+    font-size: 16px;
+    font-weight: 700;
+    margin-top: 12px;
+    margin-bottom: 6px;
+}
+
+.receptpopupingr, .receptbereid{
+    margin-left: 18px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    line-height: 150%;
+}
+
+
+.receptsluitknop{
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    border: none;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.receptsluitknop i{
+    font-size: 18px;
+    color: #0f172a;
+}
+
+/* pop-up responive op telefoon */
+@media (max-width: 800px) {
+
+    .receptpopup {
+        align-items: flex-start;
+        padding: 16px;
+    }
+
+    .receptglas {
+        flex-direction: column;
+        max-width: 100%;
+        padding: 16px;
+    }
+
+    .receptpopupimg {
+        flex: 0 0 auto;
+        width: 100%;
+        max-height: 40vh;
+        border-radius: 18px;
+        }
+
+    .receptpopuptxt {
+        max-height: none;
+        padding-right: 0;
+        margin-top: 12px;
+    }
+}
+
+.bonusknop{
+    color: orange;
+    border-color: orange;
+}

@@ -1,0 +1,61 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <script src="https://kit.fontawesome.com/df0a482e41.js" crossorigin="anonymous"></script>
+    <title>SmartList - Contact</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <nav>
+            <ul>
+                <li class="hideOnMobile"><a class="menulogo" href="Index.html"><img src="Images/smartlist-logo.svg" height="35px" alt=""></a></li>
+                <li class="hideOnComputer"><a class="menulogo" href="Index.html"><img src="Images/smartlist-mark.svg" height="35px" alt=""></a></li>
+                <li class="hideOnMobile"><a href="Index.html">Home</a></li>
+                <li class="hideOnMobile"><a href="Recepten.html">Recepten</a></li>
+                <li class="hideOnMobile"><a href="Contact.html">Contact</a></li>
+                <li class="menuknop" onclick=showSidemenu()><a href="#"><i class="fa-solid fa-bars" height="26" width="26"></i></a></li>
+            </ul>
+            <ul class="sidemenu">
+                <li onclick=hideSidemenu()><a class="menulogo" href="#"><i class="fa-solid fa-xmark" width="26" height="26"></i></a></li>
+                <li><a href="Index.html">Home</a></li>
+                <li><a href="Recepten.html">Recepten</a></li>
+                <li><a href="Contact.html">Contact</a></li>
+            </ul>
+
+        </nav>
+
+        <script>
+            function showSidemenu(){
+                const sidemenu = document.querySelector('.sidemenu')
+                sidemenu.style.display= 'flex'
+            }
+             function hideSidemenu(){
+                const sidemenu = document.querySelector('.sidemenu')
+                sidemenu.style.display= 'none'
+            }
+        </script>
+    </header>
+        <div class="hero">
+            <div class="heroleft">
+                <h1 class="herotitel">Zit je met een brandende vraag?</h1>
+                <p class="herotekst">Soms loopt niet alles helemaal zoals je had verwacht en zit je ineens met een probleem. Kom je er niet uit neem dan even contact op?</p>
+                <a class="heroknop" href="mailto:f.s.vanderwal@students.uu.nl">Mail ons?</a>
+            </div>
+
+            <div class="hideOnMobile" class="heroright">
+                <img class="heroimg" src="Images/contactimgtiny(1).png" alt="">
+            </div>
+        </div>
+
+<footer class="footer py-3 text-center text-black">© 2025 SmartList <br> Een website van Berkay, Thijs, Tim & Fabian</footer>
+
+
+
+</body>
+</html>

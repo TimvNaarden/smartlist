@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>SmartList Mark</title>
+  <desc>Alleen het karretje + check, transparante achtergrond.</desc>
+  <rect x="22" y="28" rx="10" ry="10" width="84" height="44" stroke="#16A34A" stroke-width="8" fill="none"/>
+  <path d="M16 20 H34" stroke="#16A34A" stroke-width="8" stroke-linecap="round"/>
+  <path d="M34 20 L40 40" stroke="#16A34A" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="44" cy="92" r="10" fill="#16A34A"/>
+  <circle cx="92" cy="92" r="10" fill="#16A34A"/>
+  <path d="M44 52 L58 64 L82 42" stroke="#16A34A" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

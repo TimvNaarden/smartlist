@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="360" height="96" viewBox="0 0 360 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <title>SmartList Logo</title>
+  <desc>Minimal boodschappenkarretje + woordmerk. Transparante achtergrond.</desc>
+
+  <!-- Icon: shopping cart with check -->
+  <g id="icon" transform="translate(8,16)">
+    <rect x="22" y="16" rx="8" ry="8" width="84" height="44" stroke="#16A34A" stroke-width="6" fill="none"/>
+    <path d="M8 0 H28" stroke="#16A34A" stroke-width="6" stroke-linecap="round"/>
+    <path d="M28 0 L36 24" stroke="#16A34A" stroke-width="6" stroke-linecap="round"/>
+    <circle cx="44" cy="72" r="8" fill="#16A34A"/>
+    <circle cx="90" cy="72" r="8" fill="#16A34A"/>
+    <!-- check mark inside the basket -->
+    <path d="M42 40 L56 52 L80 30" stroke="#16A34A" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  </g>
+
+  <!-- Wordmark -->
+  <g id="wordmark" transform="translate(130,26)">
+    <text x="0" y="40" font-family="Inter, Poppins, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif"
+          font-size="44" font-weight="700" fill="#111827" letter-spacing="0.2">
+      Smart<tspan fill="#16A34A">List</tspan>
+    </text>
+  </g>
+</svg>
