@@ -8,6 +8,23 @@ const HEADERS = {
     'content-type': 'application/json; charset=UTF-8',
 };
 
+const PROXY_URL = './API/AH_proxy.php';
+
+async function proxyFetch(url, options = {}) {
+    return fetch(PROXY_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            url,
+            method: options.method || 'GET',
+            headers: options.headers || {},
+            body: options.body || null,
+        }),
+    });
+}
+
 // Function to convert the first letter of a string to toUpperCase
 // Used for nice formatting
 function FirstUpper(s) {
@@ -41,7 +58,7 @@ export class AHConnector {
     }
     // AH Api stuff, a random user id token is needed
     async getAnonymousAccessToken() {
-        const response = await fetch('https://api.ah.nl/mobile-auth/v1/auth/token/anonymous', {
+        const response = await proxyFetch('https://api.ah.nl/mobile-auth/v1/auth/token/anonymous', {
             method: 'POST',
             headers: HEADERS,
             body: JSON.stringify({
@@ -64,7 +81,7 @@ export class AHConnector {
         url.searchParams.set('size', size);
         url.searchParams.set('query', query);
 
-        const response = await fetch(url.toString(), {
+        const response = await proxyFetch(url.toString(), {
             method: 'GET',
             headers: {
                 ...HEADERS,
@@ -82,7 +99,7 @@ export class AHConnector {
     async getProductDetails(product) {
         const productId = typeof product === 'object' ? product.webshopId : product;
 
-        const response = await fetch(`https://api.ah.nl/mobile-services/product/detail/v4/fir/${productId}`, {
+        const response = await proxyFetch(`https://api.ah.nl/mobile-services/product/detail/v4/fir/${productId}`, {
             headers: {
                 ...HEADERS,
                 Authorization: `Bearer ${this._accessToken.access_token}`,
@@ -150,7 +167,7 @@ export class AHConnector {
             console.log(`Fetching category: ${category}`);
             const url1 = url;
             url1.searchParams.set('category', category);
-            const response = await fetch(url1, {
+            const response = await proxyFetch(url1, {
                 headers: {
                     ...HEADERS,
                     Authorization: `Bearer ${this._accessToken.access_token}`,
@@ -183,7 +200,7 @@ export class AHConnector {
         url.searchParams.set('date', getPreviousMonday());
         url.searchParams.set('segmentId', id);
 
-        var response = await fetch(url, {
+        var response = await proxyFetch(url, {
             headers: {
                 ...HEADERS,
                 Authorization: `Bearer ${this._accessToken.access_token}`,

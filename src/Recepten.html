@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -13,21 +14,20 @@
     <script src="API/Helperfunctions.js" defer></script>
 </head>
 
-
 <body>
   <header>
      <nav>
         <ul>
-          <li class="hideOnMobile"><a class="menulogo" href="Index.html"><img src="Images/smartlist-logo.svg" height="35px" alt=""></a></li>
-          <li class="hideOnComputer"><a class="menulogo" href="Index.html"><img src="Images/smartlist-mark.svg" height="35px" alt=""></a></li>
-          <li class="hideOnMobile"><a href="Index.html">Home</a></li>
+          <li class="hideOnMobile"><a class="menulogo" href="index.html"><img src="Images/smartlist-logo.svg" height="35px" alt=""></a></li>
+          <li class="hideOnComputer"><a class="menulogo" href="index.html"><img src="Images/smartlist-mark.svg" height="35px" alt=""></a></li>
+          <li class="hideOnMobile"><a href="index.html">Home</a></li>
           <li class="hideOnMobile"><a href="Recepten.html">Recepten</a></li>
           <li class="hideOnMobile"><a href="Contact.html">Contact</a></li>
           <li class="menuknop" onclick=showSidemenu()><a href="#"><i class="fa-solid fa-bars" height="26" width="26"></i></a></li>
         </ul>
         <ul class="sidemenu">
           <li onclick=hideSidemenu()><a class="menulogo" href="#"><i class="fa-solid fa-xmark" width="26" height="26"></i></a></li>
-          <li><a href="Index.html">Home</a></li>
+          <li><a href="index.html">Home</a></li>
           <li><a href="Recepten.html">Recepten</a></li>
           <li><a href="Contact.html">Contact</a></li>
         </ul>
@@ -61,12 +61,38 @@
           <button class="tagknop" data-tag="side">Sidedish</button>
           <button class="tagknop" data-tag="vegan">Vegan</button>
           <button class="tagknop" data-tag="vegetarian">Vegetarian</button>
-          <button class="tagknop bonusknop" data-tag="bonus">Bonus</button>
+          <button class="tagknop opgeslagenknop" data-tag="opgeslagen">Opgeslagen</button>
         </div>
+
+        <div class="acties-opgeslagen">
+            <button type="button" class="deelknop-opgeslagen" onclick="shareAllSavedRecipes()">
+                <i class="fa-solid fa-share-nodes"></i> Deel opgeslagen recepten
+            </button>
+<div class="selectiedropdown">
+    <button type="button" class="selectieknop" onclick="toggleSelectieDropdown()">
+        <i class="fa-solid fa-list-check"></i> Geselecteerd
+        <span class="selectiebadge" style="display:none;">0</span>
+    </button>
+    <div class="selectiepaneel">
+        <ul class="selectielijst">
+            <li class="selectieleeg">Nog geen recepten geselecteerd</li>
+        </ul>
+        <button type="button" class="lijstknop" onclick="renderShoppingList(getShoppingSelection())">
+            <i class="fa-solid fa-cart-shopping"></i> Maak boodschappenlijst
+        </button>
+    </div>
+</div>
+        </div>
+    </div>
+
+    <div class="gedeeldbanner" style="display:none;">
+        <span><i class="fa-solid fa-circle-info"></i> Je bekijkt een gedeelde receptenlijst.</span>
+        <button type="button" onclick="exitSharedView(); filterRecepten();">Terug naar alle recepten</button>
     </div>
 </div>
 
 <div class="poprechts recepten-grid"> </div>
+
 <div class="receptpopup">
         <div class="receptglas">
             <button type="button" title="X" class="receptsluitknop" onclick="hideReceptInfo()">
@@ -75,6 +101,14 @@
 
             <div class="receptpopupimg">
                 <img src="Images/pastaatje.jpg" alt="Pasta pesto met kip">
+                <div class="receptpopupacties">
+                    <button type="button" class="receptsaveknop" title="Opslaan">
+                        <i class="fa-regular fa-bookmark"></i>
+                    </button>
+                    <button type="button" class="receptshareknop" title="Delen">
+                        <i class="fa-solid fa-share-nodes"></i>
+                    </button>
+                </div>
             </div>
 
             <div class="receptpopuptxt">
@@ -101,20 +135,47 @@
                 <div class="receptbonus"></div>
             </div>
         </div>
+</div>
+
+<div class="boodschappenpopup">
+    <div class="boodschappenglas">
+        <button type="button" title="X" class="receptsluitknop" onclick="hideShoppingList()">
+            <i class="fa-solid fa-x" style="color: #4ca054;"></i>
+        </button>
+        <h3>Boodschappenlijst</h3>
+        <ul class="boodschappenlijst"></ul>
+        <button type="button" class="deelknop" onclick="shareShoppingList()">
+            <i class="fa-solid fa-share-nodes"></i> Deel lijst
+        </button>
     </div>
+</div>
+
 <footer class="footer py-3 text-center text-black">© 2025 SmartList <br> Een website van Berkay, Thijs, Tim & Fabian</footer>
-<script>  
+
+<script>
 const tagButtons = document.querySelectorAll('.tagknop');
-const searchInput = document.getElementById('receptZoek'); 
+const searchInput = document.getElementById('receptZoek');
 let activeTag = "all";
+
+// helper zodat de "Maak boodschappenlijst" knop in de HTML de Set uit Recipes.js kan lezen
+function shoppingSelectionArray() {
+  return typeof window.getShoppingSelection === 'function' ? window.getShoppingSelection() : [];
+}
+
 function filterRecepten() {
-  // Changes, so need to be called everytime
   const recipeCards = document.querySelectorAll('.receptcard');
   recipeCards.forEach((card) => {
-    const titleElement = card.querySelector('.recepttitel'); 
+    const titleElement = card.querySelector('.recepttitel');
     const title = titleElement.textContent.toLowerCase();
     const query = searchInput.value.trim().toLowerCase();
     const matchesSearch = title.includes(query);
+
+    if (activeTag === 'opgeslagen') {
+      const isSaved = typeof isRecipeSaved === 'function' && isRecipeSaved(card.dataset.id);
+      card.style.display = (isSaved && matchesSearch) ? 'block' : 'none';
+      return;
+    }
+
     if (activeTag === 'all' && matchesSearch) {
       card.style.display = 'block';
       return;
@@ -130,29 +191,77 @@ function filterRecepten() {
     }
   });
 }
-function handleTagClick(button) { 
-  tagButtons.forEach(function (tagButton) { 
+
+function handleTagClick(button) {
+  if (typeof isSharedView === 'function' && isSharedView()) {
+    exitSharedView();
+  }
+  tagButtons.forEach(function (tagButton) {
     tagButton.classList.remove('active');
-  }); 
-  button.classList.add('active'); 
-  activeTag = button.dataset.tag || 'all'; 
-  filterRecepten(); 
-} 
-if (tagButtons.length > 0) { 
-  tagButtons.forEach(function (button) { 
-    button.addEventListener('click', function () { 
+  });
+  button.classList.add('active');
+  activeTag = button.dataset.tag || 'all';
+  filterRecepten();
+}
+
+if (tagButtons.length > 0) {
+  tagButtons.forEach(function (button) {
+    button.addEventListener('click', function () {
       handleTagClick(button);
-    }); 
+    });
   });
 }
-if (searchInput) { searchInput.addEventListener('input', filterRecepten); } 
+
+if (searchInput) {
+  searchInput.addEventListener('input', function () {
+    if (typeof isSharedView === 'function' && isSharedView()) {
+      exitSharedView();
+    }
+    filterRecepten();
+  });
+}
+
+// Save/share knoppen in de popup koppelen
+document.addEventListener('DOMContentLoaded', () => {
+  const saveBtn = document.querySelector('.receptsaveknop');
+  const shareBtn = document.querySelector('.receptshareknop');
+  const popup = document.querySelector('.receptpopup');
+
+  if (saveBtn && popup) {
+    saveBtn.addEventListener('click', () => {
+      const mealId = popup.dataset.currentId;
+      if (mealId && typeof toggleSaveRecipe === 'function') {
+        toggleSaveRecipe(mealId);
+      }
+    });
+  }
+
+  if (shareBtn && popup) {
+    shareBtn.addEventListener('click', () => {
+      const mealId = popup.dataset.currentId;
+      if (mealId && typeof shareRecipe === 'function') {
+        shareRecipe(mealId);
+      }
+    });
+  }
+});
 </script>
 
-<script type="module"> 
+<script type="module">
+await loadAllRecipes();
 
-loadRandomRecipes(50);
+const params = new URLSearchParams(window.location.search);
+const mealId = params.get('recept');
+const meals = params.get('recepten');
+const boodschappen = params.get('boodschappen');
 
+if (mealId && window.mealsById && window.mealsById[mealId]) {
+    showReceptInfo(mealId);
+} else if (meals) {
+    showRecipesByIds(meals.split(','));
+} else if (boodschappen) {
+    renderShoppingList(boodschappen.split(','));
+}
 </script>
 </body>
 </html>
-
