@@ -23,7 +23,7 @@ jobs:
           port: ${{ secrets.SERVER_PORT || '22' }}
           script: |
             cd ${{ secrets.DEPLOY_PATH }}
-            git pull origin main
+            git pull
             docker compose pull
             docker compose up -d --remove-orphans
             echo "✅ Deploy complete at $(date)"
