@@ -1,0 +1,29 @@
+name: Deploy to Server
+
+on:
+  push:
+    tags:
+      - 'release-*'   # Push a tag like `release-1.0.0` to trigger a deploy
+
+jobs:
+  deploy:
+    name: Deploy via SSH
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Deploy to server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT || '22' }}
+          script: |
+            cd ${{ secrets.DEPLOY_PATH }}
+            git pull origin main
+            docker compose pull
+            docker compose up -d --remove-orphans
+            echo "✅ Deploy complete at $(date)"
