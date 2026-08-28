@@ -331,6 +331,20 @@ function openDetail(id) {
         source.innerHTML = '';
         if (item.video) source.appendChild(externalLink(item.video, 'fa-brands fa-youtube', 'Bekijk de video'));
         if (item.source) source.appendChild(externalLink(item.source, 'fa-solid fa-link', 'Origineel recept'));
+        // Recepten uit de Wikibooks Cookbook staan onder CC BY-SA; die licentie
+        // vraagt om naamsvermelding bij de tekst en bij de foto.
+        if (item.creativeCommons) {
+            const licence = document.createElement('p');
+            licence.className = 'detaillicentie';
+            licence.append('Tekst van Wikibooks Cookbook, ');
+            licence.appendChild(externalLink('https://creativecommons.org/licenses/by-sa/4.0/', '', 'CC BY-SA 4.0'));
+            if (item.imageSource) {
+                licence.append('. Foto: ');
+                licence.appendChild(externalLink(item.imageSource, '', 'Wikimedia Commons'));
+            }
+            licence.append('.');
+            source.appendChild(licence);
+        }
     }
 
     const selectButton = popup.querySelector('.detaillijstknop');
@@ -351,7 +365,14 @@ function externalLink(href, icon, label) {
     link.href = href;
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
-    link.innerHTML = `<i class="${icon}" aria-hidden="true"></i> ${label}`;
+    link.textContent = label;
+    if (icon) {
+        const symbol = document.createElement('i');
+        symbol.className = icon;
+        symbol.setAttribute('aria-hidden', 'true');
+        link.prepend(document.createTextNode(' '));
+        link.prepend(symbol);
+    }
     return link;
 }
 

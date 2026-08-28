@@ -977,6 +977,13 @@ a.receptcard:hover {
     color: var(--accent);
 }
 
+.detailbron .detaillicentie {
+    flex: 1 0 100%;
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--tekst-licht);
+}
+
 .detailsluitknop {
     position: absolute;
     top: 14px;

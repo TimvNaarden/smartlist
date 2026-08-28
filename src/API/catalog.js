@@ -10,7 +10,7 @@
 //   ingredients: [{ name, measure }],
 //   steps: string[],
 //   facts: [{ icon, label }],
-//   source, video,
+//   source, video, imageSource, creativeCommons,
 // }
 
 export const MEAL = 'meal';
@@ -144,6 +144,8 @@ function normalizeMeal(row) {
         steps: splitSteps(row.strInstructions),
         source: row.strSource || '',
         video: row.strYoutube || '',
+        imageSource: row.strImageSource || '',
+        creativeCommons: row.strCreativeCommonsConfirmed === 'Yes',
     };
 }
 
@@ -180,5 +182,7 @@ function normalizeDrink(row) {
         steps: splitSteps(row.strInstructions),
         source: '',
         video: row.strVideo || '',
+        imageSource: '',
+        creativeCommons: false,
     };
 }

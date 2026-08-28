@@ -36,27 +36,107 @@ src/
     shopping.js     De boodschappenlijst, gedeeld tussen beide pagina's
     storage.js      Veilige wrapper om localStorage
     nav.js          Menu en actieve pagina
-    recipes.json    790 gerechten uit TheMealDB
+    recipes.json    1110 gerechten: 790 uit TheMealDB, 320 uit Wikibooks
     cocktails.json  627 drankjes uit TheCocktailDB
     AH_API.js       Albert Heijn bonusintegratie (nu niet in gebruik)
     AH_proxy.php    Doorgeefluik voor de AH api, met host-allowlist
     Helperfunctions.js  Vertaaltabel voor de AH-integratie
 tools/
   fetch_cocktails.py  Bouwt src/API/cocktails.json opnieuw op
+  fetch_wikibooks.py  Haalt extra gerechten uit de Wikibooks Cookbook
+  fetch_images.py     Zet de afbeeldingen van die gerechten in de repo
+  normalize_data.py   Maakt maten, namen en stappen in beide databases gelijk
+  check_data.py       Controleert beide databases op fouten
 docker/
   smartlist.conf    Apache: gzip en cache-headers voor de json-databases
 ```
 
 ## Databases verversen
 
-De site doet tijdens gebruik geen enkele aanvraag naar TheMealDB of
-TheCocktailDB; beide databases staan als json in de repository.
+De site doet tijdens gebruik geen enkele aanvraag naar TheMealDB, TheCocktailDB
+of Wikibooks; alle gegevens staan als json in de repository.
 
 ```bash
-python3 tools/fetch_cocktails.py     # schrijft src/API/cocktails.json
+python3 tools/fetch_cocktails.py           # src/API/cocktails.json opnieuw opbouwen
+python3 tools/fetch_wikibooks.py --limit 320  # extra gerechten toevoegen
+python3 tools/fetch_images.py              # de afbeeldingen daarvan binnenhalen
+python3 tools/normalize_data.py            # maten en namen gelijktrekken
+python3 tools/check_data.py                # controleren
 ```
 
-`recipes.json` is eerder op dezelfde manier uit TheMealDB gehaald.
+Die volgorde is belangrijk: `fetch_images.py` leest en schrijft recipes.json, dus
+`normalize_data.py` hoort erna te komen. `normalize_data.py` is idempotent, dus
+nog een keer draaien kan altijd.
+
+### Waar de gerechten vandaan komen
+
+| Bron | Aantal | id-bereik |
+| --- | --- | --- |
+| TheMealDB | 790 | 52764 - 53579 |
+| Wikibooks Cookbook | 320 | 90001 - 90320 |
+
+TheMealDB bevat in totaal 793 gerechten en die staan er vrijwel allemaal al in;
+die bron is dus uitgeput. De Wikibooks Cookbook is de tweede bron: 3792 recepten,
+waarvan er 589 een afbeelding en een bruikbare structuur hebben. Daarvan zijn de
+320 gekozen die het beste passen bij de gerechten die al opgeslagen waren
+(Aziatisch, Spaans, Turks, bijgerechten en nagerechten), en die de
+kwaliteitscontrole in `fetch_wikibooks.py` doorkomen.
+
+De id's beginnen bij 90001 zodat ze nooit botsen met nieuwe id's van TheMealDB.
+
+### Licentie van de Wikibooks-gerechten
+
+De tekst van de Wikibooks Cookbook staat onder CC BY-SA 4.0 en de afbeeldingen
+onder hun eigen licentie op Wikimedia Commons. Per gerecht staat daarom:
+
+- `strSource` - de Wikibooks-pagina
+- `strImageSource` - de bestandspagina van de afbeelding op Commons
+- `strCreativeCommonsConfirmed` - `"Yes"`
+
+De popup laat bij die gerechten "Tekst van Wikibooks Cookbook, CC BY-SA 4.0" zien
+met een link naar de bron en naar de foto. Haal die vermelding niet weg: de
+licentie vraagt erom.
+
+De afbeeldingen staan in `src/Images/recipes/` in plaats van dat ze van Commons
+worden gehaald. Commons knijpt het aantal verzoeken per bezoeker af (http 429) en
+bij het doorbladeren van meer dan duizend kaarten loop je daar tegenaan.
+
+## Eén vorm voor maten en namen
+
+`tools/normalize_data.py` schrijft alle hoeveelheden in dezelfde vorm en geeft elk
+ingrediënt één naam. Dat is nodig omdat de boodschappenlijst ingrediënten
+samenvoegt op naam: zonder dit levert "1 tbsp olive oil" naast "1 tablespoon of
+olive oil" twee regels op.
+
+De vorm is:
+
+```
+<hoeveelheid> <eenheid>[, bewerking]      1 tbsp | 100 g | 2 cloves, minced
+<omschrijving>                            To taste | Pinch | For frying
+```
+
+Wat er onder andere gelijkgetrokken is:
+
+| Was | Is |
+| --- | --- |
+| `1 tablespoon`, `1 tbs`, `1 tblsp`, `1 tbls` | `1 tbsp` |
+| `1 teaspoon`, `1 Tsp` | `1 tsp` |
+| `100g`, `100 Grams`, `100 g` | `100 g` |
+| `½ tsp`, `0.5 tsp`, `1/2 tsp` | `1/2 tsp` |
+| `75g/3oz`, `1 cup (240 ml)` | `75 g`, `1 cup` |
+| `2 cloves minced`, `1 chopped` | `2 cloves, minced`, `1, chopped` |
+| `sliced thinly` | `thinly sliced` |
+| `Sprinking`, `Spinkling` | `For sprinkling` |
+| `cilantro`, `Coriander Leaves` | `Coriander` |
+| `scallions`, `green onions` | `Spring Onions` |
+| `all purpose flour` | `Plain Flour` |
+| `powdered sugar`, `superfine sugar` | `Icing Sugar`, `Caster Sugar` |
+| `chicken broth`, `tomato paste` | `Chicken Stock`, `Tomato Puree` |
+| `ground beef`, `shrimp` | `Minced Beef`, `Prawns` |
+
+De bereidingswijze wordt één stap per regel, zonder `step 1`-regels en zonder
+eigen nummering; de nummers komen van de `<ol>` in de pagina. Stappen langer dan
+450 tekens worden op zinsgrenzen gesplitst.
 
 ## Boodschappenlijst
 
