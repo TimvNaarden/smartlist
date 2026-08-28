@@ -100,6 +100,17 @@ VEGAN_SUBSTITUTE = re.compile(
     r".*\b(milk|butter|cream|creams|cheese|egg|eggs|yoghurt|yogurt)\b"
 )
 
+# Ingrediënten die een gerecht niet vegetarisch maken zonder dat er vlees in zit.
+# Suet is rundvet, marshmallows en gelatinepudding bevatten gelatine.
+NOT_VEGETARIAN = re.compile(
+    r"(?i)\b(gelatins?|gelatines?|marshmallows?|suets?|isinglass|rennet|tallow|carmine|bone broth)\b"
+)
+
+# Plantaardige varianten daarvan bestaan wel.
+VEGETARIAN_SUBSTITUTE = re.compile(
+    r"(?i)\b(vegetable|vegan|plant|agar)\b.*\b(suet|marshmallow|gelatin|gelatine)\b|\bagar\b"
+)
+
 # ---------------------------------------------------------------- soort gerecht
 
 DESSERT_WORDS = [
@@ -394,12 +405,25 @@ def repair(meal):
     if current == "Vegan" and dairy:
         return "Vegetarian", "zuivel of ei in een vegan gerecht"
 
-    # 3) de categorie noemt een bestanddeel dat er helemaal niet in zit
+    # 3) de categorie noemt een bestanddeel dat er niet in zit
     if current in PROTEIN_CATEGORIES and current not in present:
         if protein:
             return protein, "ander hoofdbestanddeel dan de categorie zegt"
         if present:
             return sorted(present)[0], "ander hoofdbestanddeel dan de categorie zegt"
+
+        # Zit het bestanddeel er nergens in, ook niet als smaakmaker, dan gaat de
+        # categorie over het soort gerecht en niet over de inhoud: sushi met alleen
+        # komkommer blijft sushi. Het dieet komt in dat geval uit strTags.
+        flavouring_only = any(
+            name in FLAVOURING and mentions(name, dict(PROTEIN)[current])
+            for name, _, _ in ingredients_of(meal)
+        )
+        title_says_otherwise = (mentions(title, ["vegetable", "vegetarian", "vegan", "veggie"])
+                                or mentions(title, SIDE_WORDS) or mentions(title, STARTER_WORDS))
+        if not flavouring_only and not title_says_otherwise:
+            return None, None
+
         if mentions(title, STARTER_WORDS):
             return "Starter", "geen vlees of vis, en de titel wijst op een voorgerecht"
         if mentions(title, SIDE_WORDS):
@@ -413,6 +437,36 @@ def repair(meal):
         return ("Vegetarian" if dairy else "Vegan"), "geen vlees of vis in het gerecht"
 
     return None, None
+
+
+DIET_TAGS = ("Vegan", "Vegetarian")
+
+
+def diet_tags(meal):
+    """Geeft de dieetlabels die bij de ingrediënten passen.
+
+    Deze labels komen náást de categorie. De filters op de receptenpagina kijken
+    naar de categorie én naar de tags, dus een visgerecht zonder vis in het recept
+    valt zo onder Vis en onder Vegetarisch.
+
+    Hier is de regel strenger dan bij de categorie: bouillon en vissaus halen het
+    label weg. Wie op dieet filtert wil daarop kunnen vertrouwen.
+    """
+    meat, dairy = has_animal_product(meal)
+    if meat or has_animal_flavouring(meal):
+        return []
+    for name, _, _ in ingredients_of(meal):
+        if NOT_VEGETARIAN.search(name) and not VEGETARIAN_SUBSTITUTE.search(name):
+            return []
+    return ["Vegetarian"] if dairy else ["Vegan", "Vegetarian"]
+
+
+def set_diet_tags(meal):
+    """Zet de dieetlabels in strTags, zonder de bestaande labels te verliezen."""
+    existing = [tag.strip() for tag in (meal.get("strTags") or "").split(",") if tag.strip()]
+    keep = [tag for tag in existing if tag not in DIET_TAGS]
+    tags = keep + diet_tags(meal)
+    return ",".join(tags) if tags else None
 
 
 def fix_area(meal):
@@ -442,6 +496,7 @@ def main():
     transitions = Counter()
     examples = {}
     area_fixed = 0
+    tag_changed = Counter()
 
     reasons = Counter()
     for meal in meals:
@@ -462,13 +517,19 @@ def main():
             examples.setdefault(key, []).append(meal["strMeal"])
             meal["strCategory"] = category
 
+        tags = set_diet_tags(meal)
+        if tags != meal.get("strTags"):
+            tag_changed[1 if tags else 0] += 1
+            meal["strTags"] = tags
+
         area, country = fix_area(meal)
         if (area, country) != (meal.get("strArea"), meal.get("strCountry")):
             area_fixed += 1
             meal["strArea"], meal["strCountry"] = area, country
 
     total = sum(transitions.values())
-    print(f"{len(meals)} gerechten, categorie aangepast bij {total}, keuken aangevuld bij {area_fixed}\n")
+    print(f"{len(meals)} gerechten, categorie aangepast bij {total}, keuken aangevuld bij {area_fixed}, "
+          f"dieetlabel gezet bij {tag_changed[1]} en weggehaald bij {tag_changed[0]}\n")
     for reason, count in reasons.most_common():
         print(f"  {count:>4}x {reason}")
     print()

@@ -182,6 +182,30 @@ Bij een afgekapte ingrediëntenlijst (alle 20 plekken gevuld) of een
 plaatsvervanger als `Your Choice of Meat` blijft de bestaande categorie staan; dan
 weet de bron het beter dan de lijst.
 
+### Onder meer dan één filter
+
+De filters op de receptenpagina kijken naar de categorie, de keuken én `strTags`.
+Een gerecht kan daardoor onder meerdere filters vallen, en dat is precies wat een
+enkele categorie niet kan uitdrukken: het sushirecept in de database bestaat uit
+rijst, azijn en komkommer, dus het hoort zowel onder Vis (het is sushi) als onder
+Vegetarisch (er zit geen vis in).
+
+`classify_meals.py` zet daarom `Vegetarian` en `Vegan` als tag bij elk gerecht dat
+eraan voldoet, los van de categorie. Het Vegetarisch-filter laat nu 591 gerechten
+zien in plaats van 139, inclusief de nagerechten, bijgerechten en soepen zonder
+vlees. Vegan gerechten krijgen ook de tag Vegetarian, want dat is een deelverzameling.
+
+Voor de tag is de regel strenger dan voor de categorie: bouillon, vissaus,
+gelatine, marshmallows en suet (rundvet) halen de tag weg. Wie op dieet filtert
+moet daarop kunnen vertrouwen. Een categorie die uit de bron komt laten we wel
+staan bij een bouillonblokje.
+
+Zit een bestanddeel er nergens in, ook niet als smaakmaker, dan gaat de categorie
+over het soort gerecht en niet over de inhoud: dat is waarom Sushi onder Vis blijft
+staan. Alleen als de titel iets anders zegt ("Vegetable Shepherds Pie") of het
+bestanddeel er uitsluitend als smaakmaker in zit (risotto met kippenbouillon)
+verandert de categorie.
+
 `strArea` en `strCountry` worden op elkaar afgestemd. Er stond bij 145 gerechten
 geen keuken terwijl het land wel bekend was, en bij 142 stond de landsnaam in
 `strArea` (`Netherlands` in plaats van `Dutch`). De filters en de kaarten gebruiken
