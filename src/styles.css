@@ -1,22 +1,118 @@
+/* ==========================================================================
+   SmartList stylesheet
+   1. Tokens en basis
+   2. Navigatie
+   3. Hero en homepagina
+   4. Ontdekken: filters en kaarten
+   5. Popups (detail en boodschappenlijst)
+   6. Meldingen
+   ========================================================================== */
+
+/* 1. Tokens en basis ------------------------------------------------------ */
+
+:root {
+    /* Eten is groen, drinken is amber. Alleen deze tokens verschillen per
+       pagina, de rest erft de kleur. */
+    --accent: #16a34a;
+    --accent-donker: #15803d;
+    --accent-zacht: #f4fbf6;
+    --accent-rand: #cdeed8;
+
+    --eten: #16a34a;
+    --drinken: #b45309;
+
+    --tekst: #111827;
+    --tekst-zacht: #4b5563;
+    --tekst-licht: #9ca3af;
+    --lijn: #e5e7eb;
+    --vlak: #ffffff;
+    --radius: 16px;
+    --radius-rond: 999px;
+    --schaduw: 0 6px 18px rgba(0, 0, 0, 0.08);
+    --schaduw-hoog: 0 12px 30px rgba(0, 0, 0, 0.18);
+    --paginamarge: 4rem;
+}
+
+body.thema-drank {
+    --accent: #b45309;
+    --accent-donker: #92400e;
+    --accent-zacht: #fdf7ee;
+    --accent-rand: #f3ddbf;
+}
+
+@media (max-width: 800px) {
+    :root {
+        --paginamarge: 1.5rem;
+    }
+}
+
 * {
     margin: 0;
     padding: 0;
-    scroll-behavior: smooth;
+    box-sizing: border-box;
     font-family: 'Roboto', sans-serif;
+}
+
+html {
+    scroll-behavior: smooth;
 }
 
 body {
     min-height: 100vh;
+    color: var(--tekst);
 }
 
-/* nav */
+body.geen-scroll {
+    overflow: hidden;
+}
+
+img {
+    max-width: 100%;
+}
+
+/* Het hidden-attribuut moet ook winnen van eigen display-regels. */
+[hidden] {
+    display: none !important;
+}
+
+h2 {
+    font-size: clamp(2rem, 5vw, 3.75rem);
+    line-height: 100%;
+    font-weight: 900;
+    letter-spacing: -1px;
+    margin: 16px 0;
+    color: var(--tekst);
+}
+
+/* Alleen voor voorlezers, bijvoorbeeld bij knoppen met enkel een icoon. */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+:focus-visible {
+    outline: 3px solid var(--accent);
+    outline-offset: 2px;
+}
+
+/* 2. Navigatie ------------------------------------------------------------ */
+
 header {
     position: sticky;
     top: 0;
+    z-index: 100;
+    background-color: var(--vlak);
 }
 
 nav {
-    background-color: white;
+    background-color: var(--vlak);
     box-shadow: 3px 3px 5px rgba(0, 0, 0, 0.1);
 }
 
@@ -32,32 +128,44 @@ nav li {
     height: 50px;
 }
 
+nav li.logo {
+    margin-right: auto;
+}
+
 nav a {
     height: 100%;
     padding: 0 30px;
     text-decoration: none;
     display: flex;
     align-items: center;
-    color: black;
+    color: var(--tekst);
     font-weight: 650;
 }
 
-nav a:hover {
-    color: #16a34a;
+nav a:hover,
+nav a.actief {
+    color: var(--accent);
     text-decoration: none;
 }
 
-nav li:first-child {
-    margin-right: auto;
-}
-
-nav li:nth-child(2) {
-    margin-right: auto;
+nav a.actief {
+    box-shadow: inset 0 -3px 0 var(--accent);
 }
 
 .menulogo {
     height: 50px;
     padding-left: 50px;
+}
+
+.menuknop {
+    display: none;
+    height: 50px;
+    padding: 0 24px;
+    border: none;
+    background: none;
+    font-size: 20px;
+    color: var(--tekst);
+    cursor: pointer;
 }
 
 .sidemenu {
@@ -67,29 +175,34 @@ nav li:nth-child(2) {
     height: 100vh;
     width: 250px;
     z-index: 999;
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.85);
     backdrop-filter: blur(10px);
-    box-shadow:
-        -10px,
-        0px 10px rgba(0, 0, 0, 0.1);
+    box-shadow: -10px 0 20px rgba(0, 0, 0, 0.1);
     display: none;
     flex-direction: column;
     align-items: flex-start;
     justify-content: flex-start;
 }
 
-.sidemenu li {
-    width: 100%;
+.sidemenu.open {
+    display: flex;
 }
+
+.sidemenu li,
 .sidemenu a {
     width: 100%;
 }
 
-.menuknop {
-    display: none;
+.sidemenu-sluit {
+    height: 50px;
+    padding: 0 30px;
+    border: none;
+    background: none;
+    font-size: 20px;
+    color: var(--tekst);
+    cursor: pointer;
 }
 
-/* nav en algemeen responsive */
 @media (max-width: 800px) {
     .hideOnMobile {
         display: none;
@@ -110,100 +223,93 @@ nav li:nth-child(2) {
         width: 100%;
     }
 }
-@media (max-width: 800px) {
-    .receptsluitknop {
-        position: fixed;
-        top: 16px;
-        right: 16px;
-        width: 48px;
-        height: 48px;
-        z-index: 2100;
-        touch-action: manipulation;
-    }
 
-    .receptsluitknop i {
-        font-size: 20px;
-    }
-}
-/* footer icm bootstrap */
-footer {
-    background-color: white;
-    box-shadow: -3px -3px 5px rgba(0, 0, 0, 0.1);
-}
+/* 3. Hero en homepagina --------------------------------------------------- */
 
-/* hero */
-.heroimg {
-    width: 100%;
-    display: flex;
-}
 .hero {
     display: flex;
     height: 100vh;
     align-items: center;
-    padding-top: 20px;
+    padding: 20px var(--paginamarge) 0;
     min-height: 600px;
     max-height: 800px;
-    padding-left: 4rem;
-    padding-right: 2rem;
+    gap: 32px;
+}
+
+.heroimg {
+    width: 100%;
+    display: block;
 }
 
 .herotitel {
-    font-size: 60px;
+    font-size: clamp(2.25rem, 6vw, 3.75rem);
     line-height: 100%;
     font-weight: 800;
     letter-spacing: -1px;
     margin: 16px 0;
-    color: black;
 }
 
 .herotekst {
     font-size: 16px;
     line-height: 160%;
+    max-width: 46ch;
+}
+
+.heroknoppen {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 24px;
 }
 
 .heroknop {
-    color: white;
-    background-color: #16a34a;
-    padding: 8px 32px;
+    color: #ffffff;
+    background-color: var(--accent);
+    padding: 12px 32px;
     display: inline-block;
     font-weight: 500;
-    transition: all 300ms ease;
+    transition: background-color 200ms ease;
     text-decoration: none;
     border-radius: 5px;
 }
 
 .heroknop:hover {
-    padding: 13px 60px;
+    background-color: var(--accent-donker);
     text-decoration: none;
-    color: white;
+    color: #ffffff;
+}
+
+.heroknop.tweede {
+    background-color: #ffffff;
+    color: var(--drinken);
+    border: 1px solid var(--drinken);
+}
+
+.heroknop.tweede:hover {
+    background-color: #fdf7ee;
+    color: var(--drinken);
 }
 
 .hgradient {
     position: absolute;
     width: 400px;
     height: 400px;
-    background: #16a34a;
+    background: var(--accent);
     right: 0;
     top: 200px;
     z-index: -1;
     border-radius: 90%;
     filter: blur(115px);
 }
-h2 {
-    font-size: 60px;
-    line-height: 100%;
-    font-weight: 1000;
-    letter-spacing: -1px;
-    margin: 16px 0;
-    color: black;
+
+.hoe {
+    padding: 60px var(--paginamarge) 80px;
 }
 
-/* hoe */
-.hoe {
-    padding-top: 60px;
-    padding-bottom: 80px;
-    padding-left: 4rem;
-    padding-right: 3.3rem;
+.hoetitel p {
+    color: var(--tekst-zacht);
+    max-width: 70ch;
+    margin-bottom: 24px;
 }
 
 .stappenhoe {
@@ -213,12 +319,22 @@ h2 {
 }
 
 .column {
-    background: #f4fbf6;
-    border-radius: 16px;
+    background: var(--accent-zacht);
+    border-radius: var(--radius);
     padding: 24px 20px;
     display: flex;
     align-items: flex-start;
     gap: 16px;
+}
+
+.column h3 {
+    font-size: 18px;
+    margin-bottom: 4px;
+}
+
+.column p {
+    color: var(--tekst-zacht);
+    font-size: 15px;
 }
 
 .hoeimg {
@@ -226,22 +342,86 @@ h2 {
     flex-shrink: 0;
 }
 
-@media (max-width: 800px) {
-    .stappenhoe {
-        grid-template-columns: 1fr;
-    }
+/* Twee ingangen op de homepagina: eten en drinken. */
+.ontdekkeuze {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    padding: 0 var(--paginamarge) 80px;
 }
 
-/* populair */
+.ontdekkaart {
+    border: 1px solid var(--lijn);
+    border-radius: var(--radius);
+    padding: 28px;
+    text-decoration: none;
+    color: var(--tekst);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition:
+        transform 200ms ease,
+        box-shadow 200ms ease;
+}
+
+.ontdekkaart:hover {
+    text-decoration: none;
+    color: var(--tekst);
+    transform: translateY(-3px);
+    box-shadow: var(--schaduw);
+}
+
+.ontdekkaart > i {
+    font-size: 28px;
+    margin-bottom: 8px;
+}
+
+.ontdekkaart .ontdekmeer i {
+    font-size: 14px;
+    margin-left: 6px;
+}
+
+.ontdekkaart h3 {
+    font-size: 22px;
+    font-weight: 800;
+}
+
+.ontdekkaart p {
+    color: var(--tekst-zacht);
+    line-height: 150%;
+}
+
+.ontdekkaart .ontdekmeer {
+    margin-top: 12px;
+    font-weight: 650;
+}
+
+.ontdekkaart.eten {
+    background: #f4fbf6;
+    border-color: #cdeed8;
+}
+
+.ontdekkaart.eten i,
+.ontdekkaart.eten .ontdekmeer {
+    color: var(--eten);
+}
+
+.ontdekkaart.drinken {
+    background: #fdf7ee;
+    border-color: #f3ddbf;
+}
+
+.ontdekkaart.drinken i,
+.ontdekkaart.drinken .ontdekmeer {
+    color: var(--drinken);
+}
+
 .populair {
-    padding-left: 4rem;
-    padding-right: 3.3rem;
+    padding: 0 var(--paginamarge) 60px;
     display: grid;
     grid-template-columns: minmax(0, 1.2fr) minmax(0, 2fr);
     gap: 32px;
     align-items: flex-start;
-    margin: 0 auto;
-    padding-bottom: 60px;
 }
 
 .poplinks p {
@@ -256,84 +436,59 @@ h2 {
     gap: 24px;
 }
 
-/* recepten cards */
-.receptcard {
-    background: #ffffff;
-    border-radius: 16px;
-    overflow: hidden;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-    display: flex;
-    flex-direction: column;
-    flex: 0 0 calc(20% - 24px);
-    max-width: 360px;
-}
-
-.receptcard:hover {
-    box-shadow: 0 12px 18px rgba(0, 0, 0, 0.18);
-}
-
-.receptcard img {
-    width: 100%;
-    display: block;
-    object-fit: cover;
-    height: 220px;
-}
-
-.receptcontent {
-    padding: 16px 20px 20px 20px;
-}
-
-.receptinfo {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    font-size: 14px;
-    color: #4b5563;
-    margin-bottom: 10px;
-}
-
-.receptinfo i {
-    margin-right: 4px;
-}
-
-.recepttitel {
-    font-size: 18px;
-    font-weight: 700;
-    margin: 0;
-    line-height: 130%;
-}
-
 @media (max-width: 800px) {
+    .hero {
+        height: auto;
+        max-height: none;
+        min-height: 0;
+        padding-bottom: 40px;
+    }
+    .stappenhoe {
+        grid-template-columns: 1fr;
+    }
     .populair {
         grid-template-columns: 1fr;
-        padding-left: 1.5rem;
-        padding-right: 1.5rem;
     }
 }
 
-/* Recepten pagina */
+/* 4. Ontdekken: filters en kaarten ---------------------------------------- */
+
+.paginakop {
+    padding: 32px var(--paginamarge) 0;
+}
+
+.paginakop h1 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+.paginakop p {
+    color: var(--tekst-zacht);
+    margin-top: 6px;
+    max-width: 60ch;
+}
+
 .filtercontrols {
     margin-top: 16px;
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
     align-items: center;
-    padding-left: 3.3rem;
-    padding-right: 3.3rem;
+    padding: 0 var(--paginamarge);
     justify-content: space-between;
 }
 
 .zoekbalk {
     display: flex;
     align-items: center;
-    border: 1px solid #e5e7eb;
-    border-radius: 999px;
+    border: 1px solid var(--lijn);
+    border-radius: var(--radius-rond);
     padding: 0 16px;
     height: 52px;
     max-width: 480px;
     width: 100%;
     flex: 1 1 180px;
-    box-sizing: border-box;
 }
 
 .zoekbalk i {
@@ -348,7 +503,6 @@ h2 {
     width: 100%;
     font-size: 16px;
     background: transparent;
-    padding: 0;
 }
 
 .tagfilters {
@@ -359,435 +513,81 @@ h2 {
 }
 
 .tagknop {
-    border-radius: 999px;
+    border: 1px solid var(--lijn);
+    border-radius: var(--radius-rond);
     padding: 6px 16px;
-    background-color: #ffffff;
+    background-color: var(--vlak);
+    color: var(--tekst-zacht);
+    font-size: 14px;
     cursor: pointer;
+}
+
+.tagknop:hover {
+    border-color: var(--accent);
+    color: var(--accent);
 }
 
 .tagknop.active {
-    border-color: #16a34a;
-    color: #16a34a;
-    background-color: #ffffff;
-}
-
-.tagknop:focus {
-    outline: none;
-}
-
-.tagknop:focus-visible {
-    outline: none;
-}
-
-.recepten-grid {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 24px;
-    margin: 0 auto;
-    margin-top: 16px;
-    padding-bottom: 30px;
-    padding-left: 3rem;
-    padding-right: 3.3rem;
-    justify-content: space-between;
-}
-
-/* Maximaal aantal recepten breedte per 4,2,1 */
-@media (max-width: 1650px) {
-    .receptcard {
-        flex: 0 0 calc(25% - 24px);
-    }
-}
-
-@media (max-width: 1024px) {
-    .receptcard {
-        flex: 0 0 calc(50% - 24px);
-    }
-}
-
-@media (max-width: 640px) {
-    .receptcard {
-        flex: 0 0 100%;
-        max-width: 100%;
-    }
-}
-
-/* pop up */
-.receptpopup {
-    position: fixed;
-    inset: 0;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    background: rgba(15, 23, 42, 0.55);
-    z-index: 2000;
-    padding: 16px;
-}
-
-.receptpopup.open {
-    display: flex;
-}
-
-.receptglas {
-    position: relative;
-    display: flex;
-    flex-direction: row;
-    gap: 24px;
-    max-width: 900px;
-    width: 100%;
-    background-color: rgba(255, 255, 255, 0.2);
-    border-radius: 24px;
-    padding: 24px;
-    backdrop-filter: blur(10px);
-    box-shadow:
-        -10px,
-        0px 10px rgba(0, 0, 0, 0.1);
+    border-color: var(--accent);
+    background-color: var(--accent);
     color: #ffffff;
-    overflow: hidden;
-    box-sizing: border-box;
 }
 
-.receptpopupimg {
-    flex: 0 0 280px;
-    max-height: 60vh;
-    overflow: hidden;
-    border-radius: 18px;
-}
-
-.receptpopup img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-}
-
-.receptpopuptxt {
-    flex: 1;
-    max-height: 60vh;
-    overflow-y: auto;
-    padding-right: 8px;
-}
-
-.receptpopuptitel {
-    font-size: 24px;
-    font-weight: 800;
-    margin-bottom: 12px;
-}
-
-.receptpopuptxt h4 {
-    font-size: 16px;
-    font-weight: 700;
-    margin-top: 12px;
-    margin-bottom: 6px;
-}
-
-.receptpopupingr,
-.receptbereid {
-    margin-left: 18px;
-    margin-bottom: 8px;
-    font-size: 14px;
-    line-height: 150%;
-}
-
-.receptsluitknop {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    width: 36px;
-    height: 36px;
-    border-radius: 999px;
-    border: none;
-    cursor: pointer;
-    background: rgba(255, 255, 255, 0.25);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.receptsluitknop i {
-    font-size: 18px;
-    color: #0f172a;
-}
-
-/* pop-up responive op telefoon */
-@media (max-width: 800px) {
-    .receptpopup {
-        align-items: flex-start;
-        padding: 16px;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-    }
-
-    .receptglas {
-        flex-direction: column;
-        max-width: 100%;
-        padding: 16px;
-    }
-
-    .receptpopupimg {
-        flex: 0 0 auto;
-        width: 100%;
-        max-height: 40vh;
-        border-radius: 18px;
-    }
-
-    .receptpopuptxt {
-        max-height: none;
-        padding-right: 0;
-        margin-top: 12px;
-    }
-}
-
-.bonusknop {
-    color: orange;
-    border-color: orange;
-}
-
-.receptpopupimg {
-    position: relative;
-}
-
-.receptpopupacties {
-    position: absolute;
-    top: 1rem;
-    left: 1rem;
-    display: flex;
-    gap: 0.5rem;
-    z-index: 10;
-}
-
-.receptsaveknop,
-.receptshareknop {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    border: none;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    color: #333;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    transition:
-        transform 0.15s ease,
-        background 0.15s ease;
-}
-
-.receptsaveknop:hover,
-.receptshareknop:hover {
-    background: #fff;
-    transform: scale(1.08);
-}
-
-.receptsaveknop.saved {
-    background: #4ca054;
-    color: #fff;
-}
-/* Kaarten: relatieve positionering voor de nieuwe knoppen */
-.receptcard {
-    position: relative;
-}
-
-.receptcard-saveknop {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: none;
-    background: rgba(255, 255, 255, 0.9);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-    z-index: 5;
-}
-
-.receptselectbox {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    width: 20px;
-    height: 20px;
-    z-index: 5;
-    cursor: pointer;
-}
-
-/* Popup actieknoppen op de afbeelding */
-.receptpopupimg {
-    position: relative;
-}
-
-.receptpopupacties {
-    position: absolute;
-    top: 1rem;
-    left: 1rem;
-    display: flex;
-    gap: 0.5rem;
-    z-index: 10;
-}
-
-.receptsaveknop,
-.receptshareknop {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    border: none;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(4px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1rem;
-    color: #333;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-    transition:
-        transform 0.15s ease,
-        background 0.15s ease;
-}
-
-.receptsaveknop:hover,
-.receptshareknop:hover {
-    background: #fff;
-    transform: scale(1.08);
-}
-
-.receptsaveknop.saved {
-    background: #4ca054;
-    color: #fff;
-}
-
-/* Knoppen boven de opgeslagen/boodschappenlijst filters */
-.acties-opgeslagen {
+.acties-lijst {
     display: flex;
     gap: 10px;
     flex-wrap: wrap;
+    align-items: center;
+}
+
+.resultaataantal {
+    color: var(--tekst-licht);
+    font-size: 13px;
 }
 
 .deelknop-opgeslagen,
-.lijstknop {
-    border: 1px solid #16a34a;
-    background: #ffffff;
-    color: #16a34a;
-    border-radius: 999px;
-    padding: 6px 16px;
+.lijstknop,
+.selectieknop,
+.paneelknop {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--accent);
+    background: var(--vlak);
+    color: var(--accent);
+    border-radius: var(--radius-rond);
+    padding: 8px 16px;
     cursor: pointer;
     font-size: 14px;
 }
 
 .deelknop-opgeslagen:hover,
-.lijstknop:hover {
-    background: #16a34a;
+.lijstknop:hover,
+.selectieknop:hover,
+.paneelknop:hover {
+    background: var(--accent);
     color: #ffffff;
 }
 
-/* Banner voor gedeelde receptenlijst */
-.gedeeldbanner {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    background: #f4fbf6;
-    border: 1px solid #16a34a;
-    border-radius: 12px;
-    padding: 10px 16px;
-    margin: 16px 3.3rem 0;
-}
-
-.gedeeldbanner button {
-    border: none;
-    background: #16a34a;
-    color: white;
-    border-radius: 999px;
-    padding: 4px 14px;
-    cursor: pointer;
-}
-
-/* Boodschappenlijst popup */
-.boodschappenpopup {
-    position: fixed;
-    inset: 0;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    background: rgba(15, 23, 42, 0.55);
-    z-index: 2000;
-    padding: 16px;
-}
-
-.boodschappenpopup.open {
-    display: flex;
-}
-
-.boodschappenglas {
-    position: relative;
-    max-width: 480px;
+.lijstknop.primair {
+    background: var(--accent);
+    color: #ffffff;
     width: 100%;
-    max-height: 80vh;
-    overflow-y: auto;
-    background: #ffffff;
-    border-radius: 20px;
-    padding: 24px;
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+    justify-content: center;
 }
 
-.boodschappenlijst {
-    list-style: none;
-    margin: 16px 0;
-    padding: 0;
+.lijstknop.primair:hover {
+    background: var(--accent-donker);
 }
 
-.boodschapitem {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    padding: 8px 0;
-    border-bottom: 1px solid #f1f1f1;
-}
-
-.boodschapitem.afgevinkt span {
-    text-decoration: line-through;
-    color: #9ca3af;
-}
-
-.boodschapitem small {
-    color: #9ca3af;
-    font-size: 12px;
-}
-
-.deelknop {
-    border: none;
-    background: #16a34a;
-    color: white;
-    border-radius: 999px;
-    padding: 8px 20px;
-    cursor: pointer;
-}
 .selectiedropdown {
     position: relative;
 }
 
-.selectieknop {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    border: 1px solid #16a34a;
-    background: #ffffff;
-    color: #16a34a;
-    border-radius: 999px;
-    padding: 6px 16px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
 .selectiebadge {
-    background: #16a34a;
-    color: white;
-    border-radius: 999px;
+    background: var(--accent);
+    color: #ffffff;
+    border-radius: var(--radius-rond);
     font-size: 12px;
     min-width: 18px;
     height: 18px;
@@ -797,13 +597,18 @@ h2 {
     padding: 0 5px;
 }
 
+.selectieknop:hover .selectiebadge {
+    background: #ffffff;
+    color: var(--accent);
+}
+
 .selectiepaneel {
     display: none;
     position: absolute;
     top: calc(100% + 8px);
     right: 0;
-    width: 260px;
-    background: white;
+    width: 280px;
+    background: var(--vlak);
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     padding: 12px;
@@ -817,15 +622,23 @@ h2 {
 .selectielijst {
     list-style: none;
     margin: 0 0 10px;
-    padding: 0;
-    max-height: 200px;
+    max-height: 240px;
     overflow-y: auto;
+}
+
+.selectiekop {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--tekst-licht);
+    padding: 8px 0 4px;
 }
 
 .selectieitem {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 8px;
     padding: 6px 0;
     font-size: 14px;
     border-bottom: 1px solid #f1f1f1;
@@ -834,12 +647,592 @@ h2 {
 .selectieitem button {
     border: none;
     background: none;
-    color: #9ca3af;
+    color: var(--tekst-licht);
     cursor: pointer;
 }
 
+.selectieitem button:hover {
+    color: #dc2626;
+}
+
 .selectieleeg {
-    color: #9ca3af;
+    color: var(--tekst-licht);
     font-size: 13px;
     padding: 6px 0;
+}
+
+.gedeeldbanner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    background: var(--accent-zacht);
+    border: 1px solid var(--accent);
+    border-radius: 12px;
+    padding: 10px 16px;
+    margin: 16px var(--paginamarge) 0;
+}
+
+.gedeeldbanner button {
+    border: none;
+    background: var(--accent);
+    color: #ffffff;
+    border-radius: var(--radius-rond);
+    padding: 6px 14px;
+    cursor: pointer;
+}
+
+.recepten-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 24px;
+    margin-top: 16px;
+    padding: 0 var(--paginamarge) 40px;
+}
+
+.geenresultaten {
+    padding: 8px var(--paginamarge) 60px;
+    color: var(--tekst-zacht);
+}
+
+.receptcard {
+    position: relative;
+    background: var(--vlak);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--schaduw);
+    display: flex;
+    flex-direction: column;
+}
+
+.receptcard[hidden] {
+    display: none;
+}
+
+a.receptcard {
+    text-decoration: none;
+    color: inherit;
+}
+
+a.receptcard:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+.receptcard:hover {
+    box-shadow: var(--schaduw-hoog);
+}
+
+.receptcard img {
+    width: 100%;
+    display: block;
+    object-fit: cover;
+    height: 220px;
+    background: #f3f4f6;
+}
+
+/* Onzichtbare knop over de hele kaart: één klikvlak dat ook met het toetsenbord
+   te bereiken is, zonder de knoppen erboven te blokkeren. */
+.kaartopen {
+    position: absolute;
+    inset: 0;
+    border: none;
+    background: none;
+    cursor: pointer;
+    z-index: 1;
+}
+
+.receptcontent {
+    padding: 16px 20px 20px;
+    position: relative;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.receptinfo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 14px;
+    color: var(--tekst-zacht);
+    margin-bottom: 10px;
+}
+
+.receptinfo i {
+    margin-right: 4px;
+}
+
+.recepttitel {
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 130%;
+}
+
+.kaartsaveknop {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.92);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    z-index: 3;
+}
+
+.kaartsaveknop.saved {
+    background: var(--accent);
+    color: #ffffff;
+}
+
+.kaartselect {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    margin: 0;
+    padding: 6px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+}
+
+.kaartselectbox {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--accent);
+}
+
+/* 5. Popups --------------------------------------------------------------- */
+
+.detailpopup,
+.boodschappenpopup {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.55);
+    z-index: 2000;
+    padding: 16px;
+}
+
+.detailpopup.open,
+.boodschappenpopup.open {
+    display: flex;
+}
+
+.detailglas {
+    position: relative;
+    display: flex;
+    gap: 24px;
+    max-width: 900px;
+    width: 100%;
+    background: var(--vlak);
+    border-radius: 24px;
+    padding: 24px;
+    box-shadow: var(--schaduw-hoog);
+    overflow: hidden;
+}
+
+.detailmedia {
+    position: relative;
+    flex: 0 0 300px;
+    max-height: 65vh;
+    overflow: hidden;
+    border-radius: 18px;
+}
+
+.detailmedia img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    background: #f3f4f6;
+}
+
+.detailacties {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    display: flex;
+    gap: 0.5rem;
+    z-index: 10;
+}
+
+.detailsaveknop,
+.detailshareknop {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.9);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    color: #333333;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+    transition:
+        transform 150ms ease,
+        background 150ms ease;
+}
+
+.detailsaveknop:hover,
+.detailshareknop:hover {
+    background: #ffffff;
+    transform: scale(1.08);
+}
+
+.detailsaveknop.saved {
+    background: var(--accent);
+    color: #ffffff;
+}
+
+.detailtekst {
+    flex: 1;
+    max-height: 65vh;
+    overflow-y: auto;
+    padding-right: 8px;
+}
+
+.detailfacts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 13px;
+    color: var(--tekst-zacht);
+    margin-bottom: 8px;
+}
+
+.detailtitel {
+    font-size: 24px;
+    font-weight: 800;
+    margin-bottom: 12px;
+    padding-right: 44px;
+}
+
+.detailtekst h4 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-top: 16px;
+    margin-bottom: 6px;
+}
+
+.detailingredienten,
+.detailstappen {
+    margin-left: 18px;
+    margin-bottom: 8px;
+    font-size: 14px;
+    line-height: 160%;
+}
+
+.detailingredienten li,
+.detailstappen li {
+    margin-bottom: 4px;
+}
+
+.detaillijstknop {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    border: 1px solid var(--accent);
+    background: var(--accent);
+    color: #ffffff;
+    border-radius: var(--radius-rond);
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.detaillijstknop:hover {
+    background: var(--accent-donker);
+}
+
+.detaillijstknop.actief {
+    background: var(--vlak);
+    color: var(--accent);
+}
+
+.detailbron {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 16px;
+    font-size: 14px;
+}
+
+.detailbron a {
+    color: var(--accent);
+}
+
+.detailsluitknop {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-rond);
+    border: none;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 20;
+}
+
+.detailsluitknop i {
+    font-size: 18px;
+    color: var(--accent);
+}
+
+/* Boodschappenlijst */
+.boodschappenglas {
+    position: relative;
+    max-width: 520px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    background: var(--vlak);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+}
+
+.boodschappenglas h3 {
+    font-size: 22px;
+    font-weight: 800;
+    padding-right: 44px;
+}
+
+.boodschappenstatus {
+    color: var(--tekst-zacht);
+    margin-top: 12px;
+}
+
+.boodschappensectie {
+    margin-top: 20px;
+    border-top: 1px solid var(--lijn);
+    padding-top: 12px;
+}
+
+.boodschappensectie h4 {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.boodschappensectie .sectieaantal {
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: 0;
+    color: var(--tekst-licht);
+}
+
+/* Eten en drinken houden hun eigen kleur, ook binnen dezelfde lijst. */
+.boodschappensectie.sectie-meal h4 {
+    color: var(--eten);
+}
+
+.boodschappensectie.sectie-drink h4 {
+    color: var(--drinken);
+}
+
+.boodschappenlijst {
+    list-style: none;
+    margin: 8px 0 0;
+}
+
+.boodschapitem {
+    padding: 8px 0;
+    border-bottom: 1px solid #f1f1f1;
+}
+
+.boodschapitem label {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    margin: 0;
+    cursor: pointer;
+}
+
+.boodschapitem input {
+    accent-color: var(--accent);
+}
+
+.boodschapitem small {
+    display: block;
+    margin-left: 26px;
+    color: var(--tekst-licht);
+    font-size: 12px;
+}
+
+.boodschapitem.afgevinkt label span {
+    text-decoration: line-through;
+    color: var(--tekst-licht);
+}
+
+.boodschappengedeeld {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    padding: 12px 16px;
+    background: var(--accent-zacht);
+    border: 1px solid var(--accent-rand);
+    border-radius: 12px;
+    font-size: 14px;
+}
+
+.boodschappenacties {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.paneelknop.gevaar {
+    border-color: #fca5a5;
+    color: #b91c1c;
+}
+
+.paneelknop.gevaar:hover {
+    background: #b91c1c;
+    color: #ffffff;
+}
+
+@media (max-width: 800px) {
+    .detailpopup,
+    .boodschappenpopup {
+        align-items: flex-start;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .detailglas {
+        flex-direction: column;
+        padding: 16px;
+    }
+
+    .detailmedia {
+        flex: 0 0 auto;
+        width: 100%;
+        max-height: 40vh;
+    }
+
+    .detailtekst {
+        max-height: none;
+        padding-right: 0;
+        margin-top: 12px;
+    }
+
+    /* Grotere sluitknop op mobiel, die niet meescrollt. */
+    .detailsluitknop {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        width: 48px;
+        height: 48px;
+        z-index: 2100;
+        touch-action: manipulation;
+    }
+
+    .detailsluitknop i {
+        font-size: 20px;
+    }
+
+    .detailtitel,
+    .boodschappenglas h3 {
+        padding-right: 0;
+    }
+
+    .filtercontrols {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    /* In een kolom werkt flex-basis op de hoogte, dus die hier uitzetten. */
+    .zoekbalk {
+        flex: 0 0 auto;
+        max-width: none;
+    }
+
+    /* De filters schuiven horizontaal. min-width en width houden de rij binnen
+       de pagina, anders duwt de langste rij de hele pagina breder. */
+    .tagfilters {
+        margin-left: 0;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 4px;
+        min-width: 0;
+        width: 100%;
+    }
+
+    .tagknop {
+        flex: 0 0 auto;
+    }
+
+    .selectiepaneel {
+        right: auto;
+        left: 0;
+        width: min(320px, calc(100vw - 3rem));
+    }
+}
+
+/* 6. Meldingen ------------------------------------------------------------ */
+
+.smartlist-toast {
+    position: fixed;
+    left: 50%;
+    bottom: 24px;
+    transform: translate(-50%, 20px);
+    background: #111827;
+    color: #ffffff;
+    padding: 12px 20px;
+    border-radius: var(--radius-rond);
+    font-size: 14px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    opacity: 0;
+    pointer-events: none;
+    transition:
+        opacity 200ms ease,
+        transform 200ms ease;
+    z-index: 3000;
+    max-width: calc(100vw - 32px);
+    text-align: center;
+}
+
+.smartlist-toast.zichtbaar {
+    opacity: 1;
+    transform: translate(-50%, 0);
+}
+
+footer {
+    background-color: var(--vlak);
+    box-shadow: -3px -3px 5px rgba(0, 0, 0, 0.1);
+    padding: 20px 16px;
+    text-align: center;
+    color: var(--tekst);
+    font-size: 14px;
+    line-height: 170%;
 }

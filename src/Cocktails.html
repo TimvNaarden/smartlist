@@ -3,8 +3,8 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <meta name="description" content="Zoek een recept en zet de ingrediënten in één klik op je boodschappenlijst." />
-        <title>SmartList - Recepten</title>
+        <meta name="description" content="Ontdek cocktails en mocktails en zet de ingrediënten op dezelfde boodschappenlijst als je recepten." />
+        <title>SmartList - Cocktails</title>
         <link rel="stylesheet" href="styles.css" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -13,7 +13,7 @@
         <script type="module" src="API/nav.js"></script>
     </head>
 
-    <body>
+    <body class="thema-drank">
         <header>
             <nav aria-label="Hoofdmenu">
                 <ul class="menubalk">
@@ -49,31 +49,31 @@
 
         <main>
             <div class="paginakop">
-                <h1>Recepten</h1>
-                <p>Kies wat je vanavond eet en vink het aan. Alle ingrediënten komen samen op één boodschappenlijst.</p>
+                <h1>Cocktails</h1>
+                <p>
+                    627 cocktails en mocktails uit TheCocktailDB. Vink een drankje aan en de ingrediënten komen op dezelfde
+                    boodschappenlijst als je recepten, netjes apart onder het kopje Drank.
+                </p>
             </div>
 
             <div class="filtercontrols">
                 <div class="zoekbalk">
                     <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
-                    <label class="sr-only" for="receptZoek">Zoek een recept op titel</label>
-                    <input type="search" id="receptZoek" placeholder="Zoek op titel..." />
+                    <label class="sr-only" for="cocktailZoek">Zoek een cocktail op naam</label>
+                    <input type="search" id="cocktailZoek" placeholder="Zoek op naam..." />
                 </div>
 
-                <div class="tagfilters" role="group" aria-label="Filter op soort gerecht">
+                <div class="tagfilters" role="group" aria-label="Filter op soort drankje">
                     <button type="button" class="tagknop active" data-tag="all">Alles</button>
-                    <button type="button" class="tagknop" data-tag="chicken">Kip</button>
-                    <button type="button" class="tagknop" data-tag="beef">Rund</button>
-                    <button type="button" class="tagknop" data-tag="pork">Varken</button>
-                    <button type="button" class="tagknop" data-tag="lamb">Lam</button>
-                    <button type="button" class="tagknop" data-tag="seafood">Vis</button>
-                    <button type="button" class="tagknop" data-tag="pasta">Pasta</button>
-                    <button type="button" class="tagknop" data-tag="vegetarian">Vegetarisch</button>
-                    <button type="button" class="tagknop" data-tag="vegan">Vegan</button>
-                    <button type="button" class="tagknop" data-tag="starter">Voorgerecht</button>
-                    <button type="button" class="tagknop" data-tag="side">Bijgerecht</button>
-                    <button type="button" class="tagknop" data-tag="breakfast">Ontbijt</button>
-                    <button type="button" class="tagknop" data-tag="dessert">Nagerecht</button>
+                    <button type="button" class="tagknop" data-tag="cocktail">Cocktail</button>
+                    <button type="button" class="tagknop" data-tag="ordinary drink">Klassiek</button>
+                    <button type="button" class="tagknop" data-tag="shot">Shot</button>
+                    <button type="button" class="tagknop" data-tag="punch / party drink">Party</button>
+                    <button type="button" class="tagknop" data-tag="shake">Shake</button>
+                    <button type="button" class="tagknop" data-tag="coffee / tea">Koffie &amp; thee</button>
+                    <button type="button" class="tagknop" data-tag="beer">Bier</button>
+                    <button type="button" class="tagknop" data-tag="non alcoholic">Alcoholvrij</button>
+                    <button type="button" class="tagknop" data-tag="iba">IBA-klassieker</button>
                     <button type="button" class="tagknop" data-tag="opgeslagen">Opgeslagen</button>
                 </div>
 
@@ -100,8 +100,8 @@
             </div>
 
             <div class="gedeeldbanner" hidden>
-                <span><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Je bekijkt een gedeelde receptenlijst.</span>
-                <button type="button" class="gedeeldsluiten">Terug naar alle recepten</button>
+                <span><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Je bekijkt een gedeelde cocktaillijst.</span>
+                <button type="button" class="gedeeldsluiten">Terug naar alle cocktails</button>
             </div>
 
             <div class="recepten-grid"></div>
@@ -117,10 +117,10 @@
                 <div class="detailmedia">
                     <img src="" alt="" />
                     <div class="detailacties">
-                        <button type="button" class="detailsaveknop" title="Opslaan" aria-label="Recept opslaan">
+                        <button type="button" class="detailsaveknop" title="Opslaan" aria-label="Cocktail opslaan">
                             <i class="fa-regular fa-bookmark" aria-hidden="true"></i>
                         </button>
-                        <button type="button" class="detailshareknop" title="Delen" aria-label="Recept delen">
+                        <button type="button" class="detailshareknop" title="Delen" aria-label="Cocktail delen">
                             <i class="fa-solid fa-share-nodes" aria-hidden="true"></i>
                         </button>
                     </div>
@@ -133,7 +133,7 @@
                     <h4>Ingrediënten</h4>
                     <ul class="detailingredienten"></ul>
 
-                    <h4 class="detailstappentitel">Bereidingswijze</h4>
+                    <h4 class="detailstappentitel">Zo maak je het</h4>
                     <ol class="detailstappen"></ol>
 
                     <div class="detailbron"></div>
@@ -175,9 +175,9 @@
 
         <script type="module">
             import { initDiscoverPage } from './API/discover.js';
-            import { MEAL } from './API/catalog.js';
+            import { DRINK } from './API/catalog.js';
 
-            initDiscoverPage({ type: MEAL });
+            initDiscoverPage({ type: DRINK });
         </script>
     </body>
 </html>
