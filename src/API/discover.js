@@ -2,10 +2,13 @@
 // (drinken) gebruikt. Het enige verschil zijn de teksten en de database die
 // wordt ingelezen; de kaarten, filters, popup en boodschappenknoppen zijn gelijk.
 
+import { schaalIngredienten } from './amounts.js';
 import { DRINK, MEAL, getItem, getItems, loadCatalog } from './catalog.js';
 import { readJSON, writeJSON } from './storage.js';
 import {
     adoptSharedList,
+    getFactor,
+    setFactor,
     clearChecked,
     clearSelection,
     copyShoppingList,
@@ -49,6 +52,8 @@ let page = null; // configuratie van de actieve pagina
 let type = MEAL;
 let activeTag = 'all';
 let searchTerm = '';
+let withTerms = []; // ingrediënten die je in huis hebt
+let withoutTerms = []; // ingrediënten die je niet wil
 let sharedIds = null; // gevuld zolang een gedeelde lijst wordt bekeken
 
 // ---------- Opslaan ----------
@@ -107,6 +112,9 @@ function buildCard(item) {
     card.dataset.id = item.id;
     card.dataset.tags = item.tags.join(',');
     card.dataset.title = item.title.toLowerCase();
+    // Alle ingrediëntnamen op de kaart: daarmee kan het filteren op ingrediënt
+    // zonder de catalogus opnieuw te doorlopen.
+    card.dataset.ingredients = item.ingredients.map((ingredient) => ingredient.name.toLowerCase()).join('|');
 
     const image = document.createElement('img');
     image.src = item.image;
@@ -155,7 +163,7 @@ function buildCard(item) {
 
     const facts = document.createElement('div');
     facts.className = 'receptinfo';
-    item.facts.slice(0, 2).forEach((fact) => {
+    item.facts.slice(0, 3).forEach((fact) => {
         const span = document.createElement('span');
         span.innerHTML = `<i class="${fact.icon}" aria-hidden="true"></i> ${fact.label}`;
         facts.appendChild(span);
@@ -165,8 +173,13 @@ function buildCard(item) {
     title.className = 'recepttitel';
     title.textContent = item.title;
 
+    const match = document.createElement('span');
+    match.className = 'kaarttreffers';
+    match.hidden = true;
+
     content.appendChild(facts);
     content.appendChild(title);
+    content.appendChild(match);
 
     card.appendChild(image);
     card.appendChild(openButton);
@@ -190,13 +203,31 @@ function renderCards(items) {
 
 // ---------- Filteren ----------
 
+// "aubergine, feta" -> ['aubergine', 'feta']
+function splitTerms(value) {
+    return (value || '')
+        .toLowerCase()
+        .split(/[,;\n]+/)
+        .map((term) => term.trim())
+        .filter(Boolean);
+}
+
+function countMatches(card, terms) {
+    const names = card.dataset.ingredients || '';
+    return terms.filter((term) => names.includes(term)).length;
+}
+
 function applyFilters() {
-    const cards = document.querySelectorAll('.receptcard');
+    const cards = [...document.querySelectorAll('.receptcard')];
     const savedIds = activeTag === 'opgeslagen' ? getSavedIds() : null;
     let visible = 0;
 
     cards.forEach((card) => {
-        const matchesSearch = !searchTerm || card.dataset.title.includes(searchTerm);
+        // De zoekbalk kijkt naar de titel én naar de ingrediënten, zodat je op
+        // "aubergine" kunt zoeken en niet alleen op een gerechtnaam.
+        const matchesSearch = !searchTerm
+            || card.dataset.title.includes(searchTerm)
+            || (card.dataset.ingredients || '').includes(searchTerm);
         const matchesShared = !sharedIds || sharedIds.includes(card.dataset.id);
 
         let matchesTag = true;
@@ -206,10 +237,25 @@ function applyFilters() {
             matchesTag = card.dataset.tags.split(',').includes(activeTag);
         }
 
-        const show = matchesSearch && matchesTag && matchesShared;
+        const treffers = withTerms.length ? countMatches(card, withTerms) : 0;
+        const matchesWith = !withTerms.length || treffers > 0;
+        const matchesWithout = !withoutTerms.length || countMatches(card, withoutTerms) === 0;
+
+        const show = matchesSearch && matchesTag && matchesShared && matchesWith && matchesWithout;
         card.hidden = !show;
+        card.dataset.treffers = String(treffers);
+
+        const badge = card.querySelector('.kaarttreffers');
+        if (badge) {
+            badge.hidden = !withTerms.length || !show;
+            badge.textContent = `${treffers} van je ${withTerms.length} ingrediënten`;
+            badge.classList.toggle('compleet', treffers === withTerms.length);
+        }
+
         if (show) visible++;
     });
+
+    sortCards(cards);
 
     const empty = document.querySelector('.geenresultaten');
     if (empty) {
@@ -224,6 +270,29 @@ function applyFilters() {
 
     const counter = document.querySelector('.resultaataantal');
     if (counter) counter.textContent = `${visible} van ${cards.length}`;
+}
+
+// Met een lijstje "wat heb ik in huis" staan de recepten met de meeste treffers
+// bovenaan. Zonder dat lijstje blijft de oorspronkelijke volgorde staan.
+let originalOrder = null;
+
+function sortCards(cards) {
+    const container = document.querySelector('.recepten-grid');
+    if (!container) return;
+    if (!originalOrder) originalOrder = cards.slice();
+
+    const wanted = withTerms.length
+        ? cards.slice().sort((a, b) => Number(b.dataset.treffers || 0) - Number(a.dataset.treffers || 0))
+        : originalOrder;
+
+    // Alleen herschikken als de volgorde echt verandert; dat scheelt werk bij
+    // meer dan duizend kaarten.
+    const current = [...container.children];
+    if (current.length === wanted.length && current.every((card, index) => card === wanted[index])) return;
+
+    const fragment = document.createDocumentFragment();
+    wanted.forEach((card) => fragment.appendChild(card));
+    container.appendChild(fragment);
 }
 
 function initFilters() {
@@ -252,6 +321,48 @@ function initFilters() {
             applyFilters();
         });
     }
+
+    initIngredientFilters();
+}
+
+function initIngredientFilters() {
+    const paneel = document.querySelector('.ingredientfilters');
+    const knop = document.querySelector('.filterknop');
+    const met = document.querySelector('.filter-met');
+    const zonder = document.querySelector('.filter-zonder');
+
+    if (knop && paneel) {
+        knop.setAttribute('aria-expanded', 'false');
+        knop.addEventListener('click', () => {
+            const open = paneel.hidden;
+            paneel.hidden = !open;
+            knop.setAttribute('aria-expanded', String(open));
+            knop.classList.toggle('actief', open);
+        });
+    }
+
+    const bijwerken = () => {
+        exitSharedView();
+        withTerms = splitTerms(met ? met.value : '');
+        withoutTerms = splitTerms(zonder ? zonder.value : '');
+        const teller = document.querySelector('.filtertelling');
+        if (teller) {
+            const aantal = withTerms.length + withoutTerms.length;
+            teller.textContent = aantal ? String(aantal) : '';
+            teller.hidden = aantal === 0;
+        }
+        applyFilters();
+    };
+
+    [met, zonder].forEach((veld) => veld && veld.addEventListener('input', bijwerken));
+
+    document.querySelectorAll('.filterleegknop').forEach((button) =>
+        button.addEventListener('click', () => {
+            if (met) met.value = '';
+            if (zonder) zonder.value = '';
+            bijwerken();
+        })
+    );
 }
 
 // ---------- Gedeelde lijst ----------
@@ -303,15 +414,8 @@ function openDetail(id) {
         });
     }
 
-    const ingredients = popup.querySelector('.detailingredienten');
-    if (ingredients) {
-        ingredients.innerHTML = '';
-        item.ingredients.forEach((ingredient) => {
-            const li = document.createElement('li');
-            li.textContent = `${ingredient.measure ? `${ingredient.measure} ` : ''}${ingredient.name}`;
-            ingredients.appendChild(li);
-        });
-    }
+    renderIngredients(popup, item);
+    renderServings(popup, item);
 
     const stepsTitle = popup.querySelector('.detailstappentitel');
     if (stepsTitle) stepsTitle.textContent = page.stepsTitle;
@@ -358,6 +462,102 @@ function openDetail(id) {
 
     const closeButton = popup.querySelector('.detailsluitknop');
     if (closeButton) closeButton.focus();
+}
+
+// ---------- Aantal personen en opschalen ----------
+
+function renderIngredients(popup, item) {
+    const list = popup.querySelector('.detailingredienten');
+    if (!list) return;
+
+    const factor = getFactor(type, item.id);
+    list.innerHTML = '';
+    schaalIngredienten(item.ingredients, factor).forEach((ingredient) => {
+        const li = document.createElement('li');
+        li.textContent = `${ingredient.measure ? `${ingredient.measure} ` : ''}${ingredient.name}`;
+        list.appendChild(li);
+    });
+}
+
+// Het aantal personen staat in de data bij de gerechten waar de bron het noemt.
+// Bij de rest weten we het niet, en dan verandert de knop in een vermenigvuldiger:
+// een verzonnen getal tonen zou net echt lijken.
+function renderServings(popup, item) {
+    const balk = popup.querySelector('.detailporties');
+    if (!balk) return;
+
+    const factor = getFactor(type, item.id);
+    const label = balk.querySelector('.portietekst');
+    const uitleg = balk.querySelector('.portieuitleg');
+
+    if (item.servings) {
+        const aantal = item.servings * factor;
+        const afgerond = Number.isInteger(aantal) ? aantal : Math.round(aantal * 10) / 10;
+        label.textContent = `${afgerond} ${item.servingsUnit}`;
+        if (uitleg) {
+            uitleg.textContent = item.servingsFromSource ? '' : 'schatting';
+            uitleg.hidden = item.servingsFromSource;
+        }
+    } else {
+        label.textContent = factor === 1 ? 'zoals in het recept' : `${formatFactor(factor)} het recept`;
+        if (uitleg) {
+            uitleg.textContent = 'aantal personen onbekend';
+            uitleg.hidden = false;
+        }
+    }
+
+    balk.dataset.factor = String(factor);
+    const minder = balk.querySelector('.portiemin');
+    if (minder) minder.disabled = factor <= 0.5;
+}
+
+function formatFactor(factor) {
+    if (factor === 0.5) return 'half';
+    return `${Number.isInteger(factor) ? factor : Math.round(factor * 10) / 10}×`;
+}
+
+// Eén stap erbij of eraf. Met een bekend aantal personen gaat het per persoon,
+// zonder dat aantal in halve en hele keren.
+function stepFactor(item, richting) {
+    const factor = getFactor(type, item.id);
+
+    if (item.servings) {
+        const personen = Math.round(item.servings * factor) + richting;
+        const grens = Math.max(1, Math.min(24, personen));
+        return grens / item.servings;
+    }
+
+    const stappen = [0.5, 1, 2, 3, 4, 6, 8];
+    const index = stappen.indexOf(factor);
+    const nieuw = index === -1 ? 1 : Math.max(0, Math.min(stappen.length - 1, index + richting));
+    return stappen[nieuw];
+}
+
+function initServings() {
+    const popup = document.querySelector('.detailpopup');
+    const balk = popup && popup.querySelector('.detailporties');
+    if (!balk) return;
+
+    balk.querySelectorAll('[data-stap]').forEach((button) =>
+        button.addEventListener('click', () => {
+            const item = getItem(type, popup.dataset.currentId);
+            if (!item) return;
+            setFactor(type, item.id, stepFactor(item, Number(button.dataset.stap)));
+            renderIngredients(popup, item);
+            renderServings(popup, item);
+        })
+    );
+
+    const herstel = balk.querySelector('.portieherstel');
+    if (herstel) {
+        herstel.addEventListener('click', () => {
+            const item = getItem(type, popup.dataset.currentId);
+            if (!item) return;
+            setFactor(type, item.id, 1);
+            renderIngredients(popup, item);
+            renderServings(popup, item);
+        });
+    }
 }
 
 function externalLink(href, icon, label) {
@@ -596,6 +796,7 @@ export async function initDiscoverPage(options) {
 
     initFilters();
     initDetailPopup();
+    initServings();
     initSelectionPanel();
     initShoppingList();
 

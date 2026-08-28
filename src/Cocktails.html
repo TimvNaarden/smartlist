@@ -63,6 +63,12 @@
                     <input type="search" id="cocktailZoek" placeholder="Zoek op naam..." />
                 </div>
 
+
+                <button type="button" class="filterknop" aria-controls="ingredientfilters" aria-expanded="false">
+                    <i class="fa-solid fa-sliders" aria-hidden="true"></i> Op ingrediënt
+                    <span class="filtertelling" hidden></span>
+                </button>
+
                 <div class="tagfilters" role="group" aria-label="Filter op soort drankje">
                     <button type="button" class="tagknop active" data-tag="all">Alles</button>
                     <button type="button" class="tagknop" data-tag="cocktail">Cocktail</button>
@@ -99,6 +105,22 @@
                 </div>
             </div>
 
+            <div class="ingredientfilters" id="ingredientfilters" hidden>
+                <div class="filterveld">
+                    <label for="filterMet"><i class="fa-solid fa-basket-shopping" aria-hidden="true"></i> Wat heb je in huis?</label>
+                    <input type="text" id="filterMet" class="filter-met" placeholder="aubergine, feta, kikkererwten" />
+                    <small>Meerdere ingrediënten met een komma. De recepten met de meeste treffers staan bovenaan.</small>
+                </div>
+                <div class="filterveld">
+                    <label for="filterZonder"><i class="fa-solid fa-ban" aria-hidden="true"></i> Waar wil je vanaf?</label>
+                    <input type="text" id="filterZonder" class="filter-zonder" placeholder="noten, varkensvlees, koriander" />
+                    <small>Recepten met een van deze ingrediënten vallen weg.</small>
+                </div>
+                <button type="button" class="filterleegknop">
+                    <i class="fa-solid fa-xmark" aria-hidden="true"></i> Filters leegmaken
+                </button>
+            </div>
+
             <div class="gedeeldbanner" hidden>
                 <span><i class="fa-solid fa-circle-info" aria-hidden="true"></i> Je bekijkt een gedeelde cocktaillijst.</span>
                 <button type="button" class="gedeeldsluiten">Terug naar alle cocktails</button>
@@ -131,6 +153,23 @@
                     <h3 class="detailtitel" id="detailtitel"></h3>
 
                     <h4>Ingrediënten</h4>
+
+                    <div class="detailporties">
+                        <button type="button" class="portiemin" data-stap="-1" aria-label="Minder">
+                            <i class="fa-solid fa-minus" aria-hidden="true"></i>
+                        </button>
+                        <span class="portieblok">
+                            <span class="portietekst"></span>
+                            <small class="portieuitleg" hidden></small>
+                        </span>
+                        <button type="button" class="portieplus" data-stap="1" aria-label="Meer">
+                            <i class="fa-solid fa-plus" aria-hidden="true"></i>
+                        </button>
+                        <button type="button" class="portieherstel" title="Terug naar het recept">
+                            <i class="fa-solid fa-rotate-left" aria-hidden="true"></i>
+                        </button>
+                    </div>
+
                     <ul class="detailingredienten"></ul>
 
                     <h4 class="detailstappentitel">Zo maak je het</h4>

@@ -31,7 +31,8 @@ src/
   API/
     catalog.js      Leest recipes.json en cocktails.json en zet beide om naar
                     hetzelfde model (titel, ingrediënten, stappen, tags)
-    amounts.js      Telt hoeveelheden van hetzelfde ingrediënt bij elkaar op
+    amounts.js      Telt hoeveelheden op en rekent recepten om naar meer personen
+    aisles.js       In welk deel van de winkel een ingrediënt ligt
     discover.js     De ontdekpagina: kaarten, filters, popup, opslaan, delen.
                     Wordt door Recepten.html en Cocktails.html gebruikt
     shopping.js     De boodschappenlijst, gedeeld tussen beide pagina's
@@ -48,6 +49,7 @@ tools/
   fetch_images.py     Zet de afbeeldingen van die gerechten in de repo
   normalize_data.py   Maakt maten, namen en stappen in beide databases gelijk
   classify_meals.py   Zet categorie en keuken van de gerechten goed
+  fetch_servings.py   Haalt aantal personen en bereidingstijd uit de bronpagina's
   check_data.py       Controleert beide databases op fouten
 docker/
   smartlist.conf    Apache: gzip en cache-headers voor de json-databases
@@ -64,6 +66,7 @@ python3 tools/fetch_wikibooks.py --limit 320  # extra gerechten toevoegen
 python3 tools/fetch_images.py              # de afbeeldingen daarvan binnenhalen
 python3 tools/normalize_data.py            # maten en namen gelijktrekken
 python3 tools/classify_meals.py            # categorie en keuken goedzetten
+python3 tools/fetch_servings.py --cache <map>  # personen en tijd ophalen
 python3 tools/check_data.py                # controleren
 ```
 
@@ -253,3 +256,80 @@ en het resultaat aan het item uit `catalog.js` hangen.
 `AH_proxy.php` accepteert alleen https-adressen op `api.ah.nl`. Zonder die
 controle is het bestand een open proxy waarmee iedereen willekeurige adressen via
 de server kan opvragen.
+
+
+## Zoeken op ingrediënt
+
+De zoekbalk kijkt naar de titel én naar de ingrediënten, dus "aubergine" vindt
+alle gerechten met aubergine. Daarnaast zit er achter de knop **Op ingrediënt** een
+paneel met twee velden:
+
+- **Wat heb je in huis?** Meerdere ingrediënten met een komma. Gerechten die er
+  minstens één van gebruiken blijven staan, gesorteerd op het aantal treffers, en
+  op de kaart staat "3 van je 4 ingrediënten".
+- **Waar wil je vanaf?** Gerechten met een van deze ingrediënten vallen weg.
+  Handig voor een allergie of iets wat je niet lust.
+
+Beide velden vergelijken op tekstdelen, dus "onion" vindt ook "Spring Onions" en
+"noot" vindt niets (de ingrediëntnamen zijn Engels). Bij uitsluiten werkt dat
+ruim: "ham" haalt ook "Graham Crackers" weg. Dat is de veilige kant om op te
+missen.
+
+Dit werkt alleen doordat elk ingrediënt één naam heeft; zie het stuk over de
+normalisatie hierboven.
+
+## Boodschappenlijst per schap
+
+`src/API/aisles.js` bepaalt in welk deel van de winkel een ingrediënt ligt:
+groente en fruit, vlees en vis, zuivel, brood, voorraad, kruiden, bakken,
+diepvries, drank, overig. De lijst is daarop gegroepeerd, zodat je de winkel in
+één ronde doorloopt in plaats van heen en weer.
+
+Dat werkt op regels en niet op een tabel met alle 1900 namen: een nieuw recept met
+"Rode Paprika" valt meteen goed zonder dat er iets bijgewerkt hoeft te worden. De
+regels staan van specifiek naar algemeen, want anders belandt "Red Wine Vinegar"
+bij de wijn en "Red Pepper" bij de peper in plaats van bij de paprika's. Waar dat
+niet lukt staat een uitzondering in `OVERRIDES`.
+
+Van de ingrediëntregels valt 94 procent in een schap. Bij de cocktails is dat 100
+procent: onbekende namen vallen daar terug op Drank, want er zijn honderden
+likeuren en die zijn nooit allemaal op te sommen. Water staat onder Overig; dat
+koop je niet.
+
+## Aantal personen en opschalen
+
+In de popup staat boven de ingrediënten hoeveel personen het recept is, met een
+knop erbij om dat te veranderen. Alle hoeveelheden gaan mee, en de
+boodschappenlijst rekent met datzelfde aantal.
+
+Het aantal personen komt uit de bron en wordt niet verzonnen:
+
+| Bron | Gerechten |
+| --- | --- |
+| schema.org-gegevens op de bronpagina (bbcgoodfood, allrecipes, en de rest) | 453 |
+| het servings-veld van de Wikibooks Cookbook | 163 |
+| onbekend | 501 |
+
+Bij de 501 zonder aantal verandert de knop in een vermenigvuldiger: "zoals in het
+recept", "2× het recept", "half het recept". Dat is met opzet zo. Ik heb geprobeerd
+het aantal te schatten uit de hoeveelheden (150 g vlees per persoon, 90 g droge
+pasta), maar getoetst tegen de gerechten waar de bron het aantal wél noemt was die
+schatting **niet beter dan altijd "4" gokken**: 26 procent precies goed tegen 27
+procent, met dezelfde gemiddelde afwijking. Zo'n getal tonen lijkt informatie maar
+is het niet.
+
+Bij 550 gerechten staat er ook een bereidingstijd op de kaart; die komt uit
+`totalTime` in dezelfde schema.org-gegevens.
+
+Bij het omrekenen worden grammen en milliliters afgerond op vijf (en boven de 500
+op vijfentwintig): de helft van 225 g wordt 115 g en niet 112,5 g. Omschrijvingen
+zonder getal blijven staan, want een snufje zout blijft een snufje.
+
+## Caching
+
+De json-bestanden, de javascript, de css en de html krijgen `Cache-Control:
+no-cache`. Dat betekent niet "niet bewaren" maar "elke keer navragen": Apache
+antwoordt met een 304 zolang het bestand hetzelfde is, dus er gaat geen data over
+de lijn. Met een lange `max-age` keek je na een deploy een dag lang naar oude
+recepten, of erger, naar oude code met nieuwe data. Afbeeldingen mogen een week
+blijven staan; die krijgen een andere naam als ze veranderen.

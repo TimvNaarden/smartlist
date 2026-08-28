@@ -661,6 +661,117 @@ nav a.actief {
     padding: 6px 0;
 }
 
+/* Filteren op ingrediënt */
+.filterknop {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid var(--lijn);
+    background: var(--vlak);
+    color: var(--tekst-zacht);
+    border-radius: var(--radius-rond);
+    padding: 8px 16px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.filterknop:hover,
+.filterknop.actief {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.filtertelling {
+    background: var(--accent);
+    color: #ffffff;
+    border-radius: var(--radius-rond);
+    font-size: 12px;
+    min-width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+}
+
+.ingredientfilters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    align-items: end;
+    gap: 16px;
+    margin: 16px var(--paginamarge) 0;
+    padding: 20px;
+    background: var(--accent-zacht);
+    border: 1px solid var(--accent-rand);
+    border-radius: var(--radius);
+}
+
+.filterveld label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 650;
+    font-size: 14px;
+    margin-bottom: 6px;
+}
+
+.filterveld input {
+    width: 100%;
+    height: 44px;
+    padding: 0 14px;
+    border: 1px solid var(--lijn);
+    border-radius: var(--radius-rond);
+    background: var(--vlak);
+    font-size: 15px;
+}
+
+.filterveld input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.filterveld small {
+    display: block;
+    margin-top: 6px;
+    color: var(--tekst-licht);
+    font-size: 12px;
+    line-height: 140%;
+}
+
+.filterleegknop {
+    justify-self: start;
+    align-self: end;
+    border: 1px solid var(--lijn);
+    background: var(--vlak);
+    color: var(--tekst-zacht);
+    border-radius: var(--radius-rond);
+    padding: 10px 18px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.filterleegknop:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+/* Hoeveel van jouw ingrediënten zitten in dit recept */
+.kaarttreffers {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 3px 10px;
+    border-radius: var(--radius-rond);
+    background: var(--lijn);
+    color: var(--tekst-zacht);
+    font-size: 12px;
+    font-weight: 650;
+}
+
+.kaarttreffers.compleet {
+    background: var(--accent);
+    color: #ffffff;
+}
+
 .gedeeldbanner {
     display: flex;
     align-items: center;
@@ -929,6 +1040,60 @@ a.receptcard:hover {
     margin-bottom: 6px;
 }
 
+/* Aantal personen en opschalen */
+.detailporties {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 4px 0 12px;
+}
+
+.detailporties button {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--lijn);
+    background: var(--vlak);
+    border-radius: 50%;
+    color: var(--tekst-zacht);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.detailporties button:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.detailporties button:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+
+.portieblok {
+    display: flex;
+    flex-direction: column;
+    min-width: 108px;
+    text-align: center;
+}
+
+.portietekst {
+    font-weight: 650;
+    font-size: 14px;
+}
+
+.portieuitleg {
+    color: var(--tekst-licht);
+    font-size: 11px;
+}
+
+.portieherstel {
+    margin-left: auto;
+}
+
 .detailingredienten,
 .detailstappen {
     margin-left: 18px;
@@ -1066,7 +1231,24 @@ a.receptcard:hover {
 
 .boodschappenlijst {
     list-style: none;
-    margin: 8px 0 0;
+    margin: 4px 0 12px;
+}
+
+/* Kopje per schap, zodat je de winkel in één ronde doorloopt */
+.schapkop {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 14px;
+    font-size: 12px;
+    font-weight: 650;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--tekst-licht);
+}
+
+.schapkop i {
+    color: var(--accent);
 }
 
 .boodschapitem {
@@ -1203,6 +1385,10 @@ a.receptcard:hover {
         right: auto;
         left: 0;
         width: min(320px, calc(100vw - 3rem));
+    }
+
+    .ingredientfilters {
+        grid-template-columns: 1fr;
     }
 }
 

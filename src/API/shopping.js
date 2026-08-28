@@ -3,12 +3,14 @@
 // aanvinken, doorlopen naar de cocktailpagina en daar een drankje toevoegen.
 // Eten en drinken blijven in de lijst zelf netjes gescheiden.
 
-import { voegMatenSamen } from './amounts.js';
+import { AISLES, aisleOf } from './aisles.js';
+import { schaalIngredienten, voegMatenSamen } from './amounts.js';
 import { DRINK, MEAL, getItem, isLoaded, itemKey, loadCatalog } from './catalog.js';
 import { readJSON, writeJSON } from './storage.js';
 
 const SELECTION_KEY = 'smartlist_selection';
 const LABEL_KEY = 'smartlist_selection_labels';
+const FACTOR_KEY = 'smartlist_selection_factors';
 const CHECKED_KEY = 'smartlist_shopping_checked_v2';
 const SELECTION_EVENT = 'smartlist:selection';
 
@@ -73,6 +75,26 @@ export function getLabel(type, id) {
     return readJSON(LABEL_KEY, {})[itemKey(type, id)] || (type === DRINK ? 'Onbekende cocktail' : 'Onbekend gerecht');
 }
 
+// Hoeveel keer een recept op de lijst staat. Zet je een recept in de popup op 6
+// personen terwijl het er 4 zijn, dan is de factor 1.5 en rekent de lijst alle
+// hoeveelheden mee.
+export function getFactor(type, id) {
+    const factors = readJSON(FACTOR_KEY, {});
+    const value = Number(factors[itemKey(type, id)]);
+    return value > 0 ? value : 1;
+}
+
+export function setFactor(type, id, factor) {
+    const factors = readJSON(FACTOR_KEY, {});
+    if (factor && factor !== 1) {
+        factors[itemKey(type, id)] = factor;
+    } else {
+        delete factors[itemKey(type, id)];
+    }
+    writeJSON(FACTOR_KEY, factors);
+    document.dispatchEvent(new CustomEvent(SELECTION_EVENT, { detail: getSelection() }));
+}
+
 export function onSelectionChange(handler) {
     document.addEventListener(SELECTION_EVENT, (event) => handler(event.detail));
 }
@@ -86,7 +108,8 @@ function mergeIngredients(items) {
     const merged = new Map();
 
     items.forEach((item) => {
-        item.ingredients.forEach((ingredient) => {
+        const ingredients = schaalIngredienten(item.ingredients, getFactor(item.type, item.id));
+        ingredients.forEach((ingredient) => {
             const key = ingredient.name.toLowerCase();
             if (!merged.has(key)) {
                 merged.set(key, { name: ingredient.name, measures: [], from: [] });
@@ -102,10 +125,33 @@ function mergeIngredients(items) {
         .sort((a, b) => a.name.localeCompare(b.name, 'nl'));
 }
 
+// Verdeelt de regels over de schappen, in de volgorde waarin je de winkel
+// doorloopt. Schappen zonder regels laten we weg.
+function groupByAisle(ingredients, fallback) {
+    const groups = new Map();
+
+    ingredients.forEach((ingredient) => {
+        const id = aisleOf(ingredient.name, fallback);
+        if (!groups.has(id)) groups.set(id, []);
+        groups.get(id).push(ingredient);
+    });
+
+    return AISLES.filter((aisle) => groups.has(aisle.id)).map((aisle) => ({
+        ...aisle,
+        ingredients: groups.get(aisle.id),
+    }));
+}
+
 export function buildShoppingList(selection = getSelection()) {
     return SECTIONS.map((section) => {
         const items = selection[section.type].map((id) => getItem(section.type, id)).filter(Boolean);
-        return { ...section, items, ingredients: mergeIngredients(items) };
+        const ingredients = mergeIngredients(items);
+        return {
+            ...section,
+            items,
+            ingredients,
+            aisles: groupByAisle(ingredients, section.type === DRINK ? 'drank' : 'overig'),
+        };
     });
 }
 
@@ -195,40 +241,49 @@ export async function renderShoppingList(selection = getSelection(), { shared = 
         count.textContent = `${section.ingredients.length} ${section.ingredients.length === 1 ? 'item' : 'items'}`;
         heading.appendChild(count);
 
-        const list = document.createElement('ul');
-        list.className = 'boodschappenlijst';
+        wrapper.appendChild(heading);
 
-        section.ingredients.forEach((ingredient) => {
-            const li = document.createElement('li');
-            li.className = 'boodschapitem';
+        section.aisles.forEach((aisle) => {
+            const aisleHeading = document.createElement('h5');
+            aisleHeading.className = 'schapkop';
+            aisleHeading.innerHTML = `<i class="${aisle.icoon}" aria-hidden="true"></i> ${aisle.naam}`;
 
-            const label = document.createElement('label');
+            const list = document.createElement('ul');
+            list.className = 'boodschappenlijst';
 
-            const checkbox = document.createElement('input');
-            checkbox.type = 'checkbox';
-            checkbox.checked = !!checkedMap[checkedKey(section.type, ingredient.name)];
+            aisle.ingredients.forEach((ingredient) => {
+                const li = document.createElement('li');
+                li.className = 'boodschapitem';
 
-            const text = document.createElement('span');
-            text.textContent = ingredient.measure ? `${ingredient.measure} ${ingredient.name}` : ingredient.name;
+                const label = document.createElement('label');
 
-            const from = document.createElement('small');
-            from.textContent = ingredient.from.join(', ');
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.checked = !!checkedMap[checkedKey(section.type, ingredient.name)];
 
-            checkbox.addEventListener('change', () => {
-                setChecked(section.type, ingredient.name, checkbox.checked);
+                const text = document.createElement('span');
+                text.textContent = ingredient.measure ? `${ingredient.measure} ${ingredient.name}` : ingredient.name;
+
+                const from = document.createElement('small');
+                from.textContent = ingredient.from.join(', ');
+
+                checkbox.addEventListener('change', () => {
+                    setChecked(section.type, ingredient.name, checkbox.checked);
+                    li.classList.toggle('afgevinkt', checkbox.checked);
+                });
+
                 li.classList.toggle('afgevinkt', checkbox.checked);
+                label.appendChild(checkbox);
+                label.appendChild(text);
+                li.appendChild(label);
+                li.appendChild(from);
+                list.appendChild(li);
             });
 
-            li.classList.toggle('afgevinkt', checkbox.checked);
-            label.appendChild(checkbox);
-            label.appendChild(text);
-            li.appendChild(label);
-            li.appendChild(from);
-            list.appendChild(li);
+            wrapper.appendChild(aisleHeading);
+            wrapper.appendChild(list);
         });
 
-        wrapper.appendChild(heading);
-        wrapper.appendChild(list);
         container.appendChild(wrapper);
     });
 
@@ -337,8 +392,11 @@ export function shoppingListAsText(sections = buildShoppingList()) {
     return sections
         .filter((section) => section.ingredients.length > 0)
         .map((section) => {
-            const lines = section.ingredients.map((item) => `- ${item.measure ? `${item.measure} ` : ''}${item.name}`);
-            return `${section.title}\n${lines.join('\n')}`;
+            const blocks = section.aisles.map((aisle) => {
+                const lines = aisle.ingredients.map((item) => `- ${item.measure ? `${item.measure} ` : ''}${item.name}`);
+                return `${aisle.naam}\n${lines.join('\n')}`;
+            });
+            return `${section.title.toUpperCase()}\n\n${blocks.join('\n\n')}`;
         })
         .join('\n\n');
 }

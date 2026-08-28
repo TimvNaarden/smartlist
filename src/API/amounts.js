@@ -182,3 +182,90 @@ export function voegMatenSamen(maten) {
     if (alles.length > 0) return alles.join(' + ');
     return omschrijvingen.join(' + ');
 }
+
+// ---------------------------------------------------------------- opschalen
+
+// Bij opschalen komen er rare getallen uit: de helft van 225 g is 112.5 g. Niemand
+// weegt dat af, dus grammen en milliliters worden netjes afgerond.
+function rondAf(waarde, eenheid) {
+    if (!DECIMAAL.has(eenheid)) return waarde;
+    if (eenheid === 'kg' || eenheid === 'l') return Math.round(waarde * 100) / 100;
+    if (waarde >= 500) return Math.round(waarde / 25) * 25;
+    if (waarde >= 20) return Math.round(waarde / 5) * 5;
+    return Math.round(waarde * 2) / 2;
+}
+
+const REEKS = /^(\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:\.\d+)?)\s*-\s*(\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:\.\d+)?)\s*(.*)$/;
+const ENKEL = /^(\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:\.\d+)?)\s*(.*)$/;
+const SAP = /^(Juice|Zest|Zest and juice) of (\d+\s+\d+\/\d+|\d+\/\d+|\d+(?:\.\d+)?)$/;
+
+/**
+ * Rekent één maat om naar een ander aantal personen.
+ *
+ *   schaalMaat('100 g', 2)              -> '200 g'
+ *   schaalMaat('2 cloves, minced', 2)   -> '4 cloves, minced'
+ *   schaalMaat('1-2 tbsp', 2)           -> '2-4 tbsp'
+ *   schaalMaat('Juice of 1', 3)         -> 'Juice of 3'
+ *   schaalMaat('To taste', 2)           -> 'To taste'
+ *
+ * Omschrijvingen zonder getal blijven staan: een snufje zout blijft een snufje.
+ */
+export function schaalMaat(raw, factor) {
+    const tekst = (raw || '').trim();
+    if (!tekst || !factor || factor === 1) return tekst;
+
+    // De bewerking achter de komma blijft ongemoeid.
+    const komma = tekst.indexOf(',');
+    const kop = komma === -1 ? tekst : tekst.slice(0, komma);
+    const staart = komma === -1 ? '' : tekst.slice(komma);
+
+    const sap = kop.match(SAP);
+    if (sap) {
+        const aantal = leesGetal(sap[2]);
+        if (aantal !== null) return `${sap[1]} of ${schrijfGetal(aantal * factor, false)}${staart}`;
+    }
+
+    const reeks = kop.match(REEKS);
+    if (reeks) {
+        const laag = leesGetal(reeks[1]);
+        const hoog = leesGetal(reeks[2]);
+        const eenheid = reeks[3].trim();
+        if (laag !== null && hoog !== null) {
+            const basis = enkelvoud(eenheid.toLowerCase());
+            const decimaal = DECIMAAL.has(basis);
+            const nieuwLaag = rondAf(laag * factor, basis);
+            const nieuwHoog = rondAf(hoog * factor, basis);
+            const nieuweEenheid = meervoud(basis, nieuwHoog);
+            const staartEenheid = nieuweEenheid ? ` ${nieuweEenheid}` : '';
+            return `${schrijfGetal(nieuwLaag, decimaal)}-${schrijfGetal(nieuwHoog, decimaal)}${staartEenheid}${staart}`;
+        }
+    }
+
+    const enkel = kop.match(ENKEL);
+    if (enkel) {
+        const aantal = leesGetal(enkel[1]);
+        const rest = enkel[2].trim();
+        if (aantal !== null) {
+            // Een verpakkingsinhoud tussen haakjes hoort niet mee te schalen.
+            const haakje = rest.match(/^(.*?)\s*(\([^)]*\))$/);
+            const eenheidTekst = (haakje ? haakje[1] : rest).trim();
+            const inhoud = haakje ? ` ${haakje[2]}` : '';
+            const basis = enkelvoud(eenheidTekst.toLowerCase());
+            const nieuw = rondAf(aantal * factor, basis);
+            const eenheid = meervoud(basis, nieuw);
+            const delen = [schrijfGetal(nieuw, DECIMAAL.has(basis))];
+            if (eenheid) delen.push(eenheid);
+            return `${delen.join(' ')}${inhoud}${staart}`;
+        }
+    }
+
+    return tekst;
+}
+
+/** Rekent de ingrediënten van een gerecht om. */
+export function schaalIngredienten(ingredienten, factor) {
+    return (ingredienten || []).map((ingredient) => ({
+        ...ingredient,
+        measure: schaalMaat(ingredient.measure, factor),
+    }));
+}

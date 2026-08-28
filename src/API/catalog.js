@@ -10,6 +10,7 @@
 //   ingredients: [{ name, measure }],
 //   steps: string[],
 //   facts: [{ icon, label }],
+//   servings, servingsUnit, servingsFromSource, totalTime,
 //   source, video, imageSource, creativeCommons,
 // }
 
@@ -106,6 +107,15 @@ function splitSteps(text) {
     return lines.length > 0 ? lines : [text.trim()];
 }
 
+// 95 minuten wordt "1 u 35", want dat leest sneller dan "95 min".
+function formatTime(minutes) {
+    if (minutes < 60) return `${minutes} min`;
+    const hours = Math.floor(minutes / 60);
+    const rest = minutes % 60;
+    return rest ? `${hours} u ${rest}` : `${hours} uur`;
+}
+
+
 function pushTag(tags, value) {
     if (!value) return;
     const tag = String(value).trim().toLowerCase();
@@ -128,7 +138,11 @@ function normalizeMeal(row) {
     pushTag(tags, origin);
     tagsFromField(tags, row.strTags);
 
+    const servings = Number(row.strServings) || null;
+    const totalTime = Number(row.strTotalTime) || null;
+
     const facts = [];
+    if (totalTime) facts.push({ icon: 'fa-regular fa-clock', label: formatTime(totalTime) });
     if (row.strCategory) facts.push({ icon: 'fa-solid fa-utensils', label: row.strCategory });
     if (origin) facts.push({ icon: 'fa-solid fa-earth-europe', label: origin });
 
@@ -142,6 +156,10 @@ function normalizeMeal(row) {
         facts,
         ingredients: collectIngredients(row, SOURCES[MEAL].maxIngredients),
         steps: splitSteps(row.strInstructions),
+        servings,
+        servingsUnit: row.strServingsUnit || 'personen',
+        servingsFromSource: row.strServingsSource === 'source',
+        totalTime,
         source: row.strSource || '',
         video: row.strYoutube || '',
         imageSource: row.strImageSource || '',
@@ -180,6 +198,10 @@ function normalizeDrink(row) {
         facts,
         ingredients: collectIngredients(row, SOURCES[DRINK].maxIngredients),
         steps: splitSteps(row.strInstructions),
+        servings: 1,
+        servingsUnit: 'glazen',
+        servingsFromSource: false,
+        totalTime: null,
         source: '',
         video: row.strVideo || '',
         imageSource: '',
