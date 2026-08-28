@@ -24,10 +24,17 @@ jobs:
           script: |
             set -e
             cd ${{ secrets.DEPLOY_PATH }}
-            git pull
+
+            # De server volgt exact de tag die deze deploy startte. Met git pull
+            # blokkeerde één lokaal gewijzigd bestand de hele uitrol, en zonder
+            # set -e liep het script daar stilletjes overheen: de Action meldde
+            # "success" terwijl er niets werd uitgerold.
+            git fetch --tags --prune --force origin
+            git reset --hard "${{ github.ref_name }}"
+
             # --build is nodig: de Dockerfile zet mod_deflate en de cache-headers
-            # aan, en die zitten in het image. Zonder --build blijft het oude image
-            # draaien en gaat recipes.json ongecomprimeerd over de lijn.
+            # aan, en die zitten in het image en niet in de gemounte src-map.
             docker compose up -d --build --remove-orphans
             docker image prune -f
-            echo "✅ Deploy complete at $(date)"
+
+            echo "✅ Deploy complete at $(date), uitgerold: ${{ github.ref_name }}"
