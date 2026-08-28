@@ -31,6 +31,7 @@ src/
   API/
     catalog.js      Leest recipes.json en cocktails.json en zet beide om naar
                     hetzelfde model (titel, ingrediënten, stappen, tags)
+    amounts.js      Telt hoeveelheden van hetzelfde ingrediënt bij elkaar op
     discover.js     De ontdekpagina: kaarten, filters, popup, opslaan, delen.
                     Wordt door Recepten.html en Cocktails.html gebruikt
     shopping.js     De boodschappenlijst, gedeeld tussen beide pagina's
@@ -46,6 +47,7 @@ tools/
   fetch_wikibooks.py  Haalt extra gerechten uit de Wikibooks Cookbook
   fetch_images.py     Zet de afbeeldingen van die gerechten in de repo
   normalize_data.py   Maakt maten, namen en stappen in beide databases gelijk
+  classify_meals.py   Zet categorie en keuken van de gerechten goed
   check_data.py       Controleert beide databases op fouten
 docker/
   smartlist.conf    Apache: gzip en cache-headers voor de json-databases
@@ -61,6 +63,7 @@ python3 tools/fetch_cocktails.py           # src/API/cocktails.json opnieuw opbo
 python3 tools/fetch_wikibooks.py --limit 320  # extra gerechten toevoegen
 python3 tools/fetch_images.py              # de afbeeldingen daarvan binnenhalen
 python3 tools/normalize_data.py            # maten en namen gelijktrekken
+python3 tools/classify_meals.py            # categorie en keuken goedzetten
 python3 tools/check_data.py                # controleren
 ```
 
@@ -137,6 +140,52 @@ Wat er onder andere gelijkgetrokken is:
 De bereidingswijze wordt één stap per regel, zonder `step 1`-regels en zonder
 eigen nummering; de nummers komen van de `<ol>` in de pagina. Stappen langer dan
 450 tekens worden op zinsgrenzen gesplitst.
+
+### Hoeveelheden optellen op de lijst
+
+`src/API/amounts.js` telt de hoeveelheden van hetzelfde ingrediënt bij elkaar op,
+zodat drie recepten met knoflook één regel geven:
+
+| Uit de recepten | Op de lijst |
+| --- | --- |
+| `3 cloves, minced` + `1 clove` + `2 cloves` | `6 cloves` |
+| `1 tsp` + `1/2 tsp` | `1 1/2 tsp` |
+| `500 g` + `800 g` | `1.3 kg` |
+| `1 small` + `1` | `2` |
+| `To taste` + `1 tsp` | `1 tsp` |
+| `1 tbsp` + `2 tsp` | `1 tbsp + 2 tsp` |
+
+Wat niet bij elkaar past blijft naast elkaar staan. De bewerking (`, minced`)
+gaat er af: op een boodschappenlijst gaat het om de hoeveelheid, niet om wat je er
+straks mee doet. Metrische eenheden houden een decimaal getal, de rest krijgt
+breuken, en gram gaat in kilo over zodra het meer dan 1000 wordt.
+
+## Categorie en keuken
+
+`tools/classify_meals.py` repareert de indeling. De categorieën van TheMealDB
+mengen gangen (Dessert, Side, Starter), hoofdbestanddelen (Beef, Chicken) en dieet
+(Vegan, Vegetarian). Of een cake onder Dessert of onder Vegetarian hoort is een
+keuze, geen fout, dus het script verandert alleen wat de ingrediënten
+tegenspreken:
+
+- een gerecht onder Vegetarian of Vegan met vlees of vis erin
+- Vegan met zuivel of ei erin
+- een categorie die een hoofdbestanddeel noemt dat er helemaal niet in zit
+
+Vissaus, oestersaus, gedroogde garnaal en bouillonblokjes gelden als smaakmaker,
+niet als hoofdbestanddeel: een Thaise curry met vissaus is geen visgerecht. Ze
+zijn ook geen reden om het label Vegetarian weg te halen, want iedereen ruilt ze
+in voor de plantaardige variant. Plantaardige vervangers (`almond milk`,
+`vegan butter`, `flax eggs`, `peanut butter`) gelden niet als zuivel of ei.
+
+Bij een afgekapte ingrediëntenlijst (alle 20 plekken gevuld) of een
+plaatsvervanger als `Your Choice of Meat` blijft de bestaande categorie staan; dan
+weet de bron het beter dan de lijst.
+
+`strArea` en `strCountry` worden op elkaar afgestemd. Er stond bij 145 gerechten
+geen keuken terwijl het land wel bekend was, en bij 142 stond de landsnaam in
+`strArea` (`Netherlands` in plaats van `Dutch`). De filters en de kaarten gebruiken
+`strArea`, dus die moet de vaste vorm van TheMealDB hebben.
 
 ## Boodschappenlijst
 

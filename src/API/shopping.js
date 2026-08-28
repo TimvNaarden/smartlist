@@ -3,6 +3,7 @@
 // aanvinken, doorlopen naar de cocktailpagina en daar een drankje toevoegen.
 // Eten en drinken blijven in de lijst zelf netjes gescheiden.
 
+import { voegMatenSamen } from './amounts.js';
 import { DRINK, MEAL, getItem, isLoaded, itemKey, loadCatalog } from './catalog.js';
 import { readJSON, writeJSON } from './storage.js';
 
@@ -78,8 +79,9 @@ export function onSelectionChange(handler) {
 
 // ---------- Lijst opbouwen ----------
 
-// Voegt dezelfde ingrediënten uit verschillende recepten samen tot één regel,
-// met alle hoeveelheden en de recepten waar ze vandaan komen.
+// Voegt dezelfde ingrediënten uit verschillende recepten samen tot één regel.
+// De hoeveelheden worden opgeteld, dus drie recepten met knoflook geven "6
+// cloves" en niet "3 cloves + 1 clove + 2 cloves".
 function mergeIngredients(items) {
     const merged = new Map();
 
@@ -95,7 +97,9 @@ function mergeIngredients(items) {
         });
     });
 
-    return [...merged.values()].sort((a, b) => a.name.localeCompare(b.name, 'nl'));
+    return [...merged.values()]
+        .map((entry) => ({ ...entry, measure: voegMatenSamen(entry.measures) }))
+        .sort((a, b) => a.name.localeCompare(b.name, 'nl'));
 }
 
 export function buildShoppingList(selection = getSelection()) {
@@ -205,8 +209,7 @@ export async function renderShoppingList(selection = getSelection(), { shared = 
             checkbox.checked = !!checkedMap[checkedKey(section.type, ingredient.name)];
 
             const text = document.createElement('span');
-            const measure = ingredient.measures.length ? `${ingredient.measures.join(' + ')} ` : '';
-            text.textContent = `${measure}${ingredient.name}`;
+            text.textContent = ingredient.measure ? `${ingredient.measure} ${ingredient.name}` : ingredient.name;
 
             const from = document.createElement('small');
             from.textContent = ingredient.from.join(', ');
@@ -334,7 +337,7 @@ export function shoppingListAsText(sections = buildShoppingList()) {
     return sections
         .filter((section) => section.ingredients.length > 0)
         .map((section) => {
-            const lines = section.ingredients.map((item) => `- ${item.measures.length ? `${item.measures.join(' + ')} ` : ''}${item.name}`);
+            const lines = section.ingredients.map((item) => `- ${item.measure ? `${item.measure} ` : ''}${item.name}`);
             return `${section.title}\n${lines.join('\n')}`;
         })
         .join('\n\n');
