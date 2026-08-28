@@ -22,8 +22,12 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_PORT || '22' }}
           script: |
+            set -e
             cd ${{ secrets.DEPLOY_PATH }}
             git pull
-            docker compose pull
-            docker compose up -d --remove-orphans
+            # --build is nodig: de Dockerfile zet mod_deflate en de cache-headers
+            # aan, en die zitten in het image. Zonder --build blijft het oude image
+            # draaien en gaat recipes.json ongecomprimeerd over de lijn.
+            docker compose up -d --build --remove-orphans
+            docker image prune -f
             echo "✅ Deploy complete at $(date)"
